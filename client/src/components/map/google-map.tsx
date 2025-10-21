@@ -36,17 +36,11 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
         const defaultCenter = center || { lat: 43.1566, lng: -77.6088 };
 
         // Create map with Map ID (required for AdvancedMarkers)
+        // Note: When using mapId, styles must be configured in Google Cloud Console
         const map = new Map(mapRef.current, {
           center: defaultCenter,
           zoom: 11,
           mapId: "CURLY_HAIR_CERTIFIED_MAP",
-          styles: [
-            {
-              featureType: "poi",
-              elementType: "labels",
-              stylers: [{ visibility: "off" }],
-            },
-          ],
           mapTypeControl: false,
           fullscreenControl: false,
           streetViewControl: false,
