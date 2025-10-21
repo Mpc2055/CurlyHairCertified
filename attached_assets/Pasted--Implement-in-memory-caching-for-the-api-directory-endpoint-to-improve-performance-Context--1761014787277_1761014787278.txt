@@ -1,0 +1,105 @@
+ Implement in-memory caching for the /api/directory endpoint to improve performance.
+
+  ## Context
+  The /api/directory endpoint currently fetches data from Airtable on every request, which takes ~1000ms.
+  Since the data only updates weekly, we want to cache the response in memory for better performance.
+
+  ## Requirements
+
+  1. **Install node-cache package**
+     - Run: npm install node-cache
+     - This is a simple in-memory caching library with TTL support
+
+  2. **Create new cache service file: server/cache.ts**
+     - Import node-cache
+     - Create and export a cache instance with default TTL
+     - Make TTL configurable via environment variable CACHE_TTL_SECONDS (default: 3600 = 1 hour)
+     - Export helper functions:
+       - `getCachedDirectory()` - Get cached directory data
+       - `setCachedDirectory(data)` - Store directory data in cache
+       - `clearCache()` - Clear all cache
+       - `getCacheStats()` - Get cache hit/miss statistics
+
+  3. **Update server/routes.ts**
+     - Import the cache service
+     - Modify the GET /api/directory endpoint to:
+       a. First check if data exists in cache
+       b. If cache hit: return cached data immediately
+       c. If cache miss: fetch from Airtable, store in cache, return data
+     - Add new POST /api/cache/clear endpoint (for manual cache invalidation)
+     - Add new GET /api/cache/stats endpoint (optional, for monitoring)
+
+  4. **Add cache warming on server startup**
+     - In server/index.ts, after the server starts, pre-populate the cache
+     - This ensures the first user gets a fast response
+     - Log when cache warming is complete
+
+  5. **Environment variable configuration**
+     - Add CACHE_TTL_SECONDS to the environment variables
+     - Document in replit.md or comments
+
+  ## Example Code Structure
+
+  server/cache.ts should look something like:
+  ```typescript
+  import NodeCache from 'node-cache';
+  import type { DirectoryData } from '@shared/schema';
+
+  const TTL_SECONDS = parseInt(process.env.CACHE_TTL_SECONDS || '3600');
+  const cache = new NodeCache({ stdTTL: TTL_SECONDS });
+
+  export function getCachedDirectory(): DirectoryData | undefined {
+    return cache.get('directory');
+  }
+
+  export function setCachedDirectory(data: DirectoryData): void {
+    cache.set('directory', data);
+  }
+
+  export function clearCache(): void {
+    cache.flushAll();
+  }
+
+  export function getCacheStats() {
+    return cache.getStats();
+  }
+
+  server/routes.ts GET /api/directory should be modified to:
+  app.get("/api/directory", async (_req, res) => {
+    try {
+      // Check cache first
+      const cachedData = getCachedDirectory();
+      if (cachedData) {
+        return res.json(cachedData);
+      }
+
+      // Cache miss - fetch from Airtable
+      const certMap = await fetchCertifications();
+      // ... rest of existing logic ...
+
+      const response: DirectoryData = {
+        salons: salonsWithStylists,
+        certifications: Array.from(certMap.values()),
+      };
+
+      // Store in cache before returning
+      setCachedDirectory(response);
+      res.json(response);
+    } catch (error) {
+      // ... existing error handling ...
+    }
+  });
+
+  Success Criteria
+
+  - First request to /api/directory takes ~1000ms (fetches from Airtable)
+  - Subsequent requests take ~10ms (served from cache)
+  - POST /api/cache/clear successfully invalidates cache
+  - Server logs indicate when cache is warmed on startup
+  - No breaking changes to existing API behavior
+
+  Notes
+
+  - Keep existing geocoding cache in server/geocoding.ts - that's working well
+  - This is adding a second layer of caching for the entire directory response
+  - Cache should be transparent to the frontend - no API changes needed

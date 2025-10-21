@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes, fetchDirectoryData } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setCachedDirectory } from "./cache";
 
 const app = express();
 app.use(express.json());
@@ -65,7 +66,19 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Warm up cache on startup
+    try {
+      log('[cache] Warming up cache...');
+      const startTime = Date.now();
+      const data = await fetchDirectoryData();
+      setCachedDirectory(data);
+      const duration = Date.now() - startTime;
+      log(`[cache] Cache warmed successfully in ${duration}ms with ${data.salons.length} salons`);
+    } catch (error) {
+      console.error('[cache] Failed to warm up cache:', error);
+    }
   });
 })();
