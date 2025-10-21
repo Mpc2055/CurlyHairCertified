@@ -168,7 +168,11 @@ export class PostgresStorage implements IStorage {
           salonResults.push({
             id: salon.id,
             name: salon.name,
-            address: salon.fullAddress,
+            address: [
+              salon.streetAddress,
+              salon.suiteUnit,
+              `${salon.city}, ${salon.state} ${salon.zipCode}`
+            ].filter(Boolean).join(', '),
             city: salon.city,
             state: salon.state,
             zip: salon.zipCode,

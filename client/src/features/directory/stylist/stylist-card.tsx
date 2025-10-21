@@ -102,15 +102,6 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
             </div>
           )}
 
-          {/* Online Booking Badge */}
-          {stylist.canBookOnline && (
-            <div className="mb-3">
-              <Badge variant="outline" className="text-xs">
-                Online Booking
-              </Badge>
-            </div>
-          )}
-
           {/* Contact Links - Compact for grid */}
           <div className="flex flex-col gap-2 mt-auto">
             {stylist.instagram && (
