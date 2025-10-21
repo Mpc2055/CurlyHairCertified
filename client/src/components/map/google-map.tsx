@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { Salon } from "@shared/schema";
 import { Loader2 } from "lucide-react";
 
@@ -9,10 +10,16 @@ interface GoogleMapProps {
   center?: { lat: number; lng: number };
 }
 
+// Configure API loader once
+setOptions({
+  key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+  version: "weekly",
+});
+
 export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const markersRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,12 +29,17 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
       try {
         if (!mapRef.current) return;
 
+        // Import Maps library
+        const { Map } = await importLibrary("maps") as google.maps.MapsLibrary;
+
         // Default to Rochester, NY center
         const defaultCenter = center || { lat: 43.1566, lng: -77.6088 };
 
-        const map = new google.maps.Map(mapRef.current, {
+        // Create map with Map ID (required for AdvancedMarkers)
+        const map = new Map(mapRef.current, {
           center: defaultCenter,
           zoom: 11,
+          mapId: "CURLY_HAIR_CERTIFIED_MAP",
           styles: [
             {
               featureType: "poi",
@@ -43,113 +55,118 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
         mapInstanceRef.current = map;
         setIsLoading(false);
       } catch (err) {
-        setError("Failed to load map");
+        console.error("Map initialization error:", err);
+        setError("Failed to load map. Please check your API key configuration.");
         setIsLoading(false);
       }
     };
 
-    if (window.google && window.google.maps) {
-      initMap();
-    } else {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
-      script.async = true;
-      script.onload = () => initMap();
-      script.onerror = () => {
-        setError("Failed to load Google Maps");
-        setIsLoading(false);
-      };
-      document.head.appendChild(script);
-    }
+    initMap();
   }, [center]);
+
+  // Create custom marker content
+  const createMarkerContent = (salon: Salon, isSelected: boolean): HTMLDivElement => {
+    const content = document.createElement("div");
+    content.className = `custom-map-marker ${isSelected ? "selected" : ""}`;
+    content.setAttribute("data-salon-id", salon.id);
+    
+    content.innerHTML = `
+      <div class="marker-circle">
+        <span class="marker-count">${salon.stylists.length}</span>
+      </div>
+    `;
+
+    return content;
+  };
 
   // Update markers when salons change
   useEffect(() => {
-    if (!mapInstanceRef.current || salons.length === 0) return;
+    const updateMarkers = async () => {
+      if (!mapInstanceRef.current || salons.length === 0) return;
 
-    // Clear existing markers
-    markersRef.current.forEach((marker) => marker.setMap(null));
-    markersRef.current.clear();
+      try {
+        // Import marker library
+        const { AdvancedMarkerElement } = await importLibrary("marker") as google.maps.MarkerLibrary;
 
-    // Create new markers
-    salons.forEach((salon) => {
-      const marker = new google.maps.Marker({
-        position: { lat: salon.lat, lng: salon.lng },
-        map: mapInstanceRef.current!,
-        title: salon.name,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: "#e91e63",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-        },
-        label: {
-          text: salon.stylists.length.toString(),
-          color: "#ffffff",
-          fontSize: "12px",
-          fontWeight: "bold",
-        },
-      });
+        // Clear existing markers
+        markersRef.current.forEach((marker) => {
+          marker.map = null;
+        });
+        markersRef.current.clear();
 
-      marker.addListener("click", () => {
-        onMarkerClick(salon.id);
-      });
+        // Create new Advanced Markers
+        salons.forEach((salon) => {
+          const content = createMarkerContent(salon, salon.id === selectedSalonId);
 
-      markersRef.current.set(salon.id, marker);
-    });
+          const marker = new AdvancedMarkerElement({
+            map: mapInstanceRef.current,
+            position: { lat: salon.lat, lng: salon.lng },
+            content: content,
+            title: salon.name,
+            gmpClickable: true,
+          });
 
-    // Fit bounds to show all markers
-    if (salons.length > 0) {
-      const bounds = new google.maps.LatLngBounds();
-      salons.forEach((salon) => {
-        bounds.extend({ lat: salon.lat, lng: salon.lng });
-      });
-      mapInstanceRef.current.fitBounds(bounds);
-    }
-  }, [salons, onMarkerClick]);
+          // Add click listener
+          marker.addListener("click", () => {
+            onMarkerClick(salon.id);
+          });
 
-  // Highlight selected marker
+          markersRef.current.set(salon.id, marker);
+        });
+
+        // Fit bounds to show all markers
+        if (salons.length > 0) {
+          const bounds = new google.maps.LatLngBounds();
+          salons.forEach((salon) => {
+            bounds.extend({ lat: salon.lat, lng: salon.lng });
+          });
+          mapInstanceRef.current.fitBounds(bounds);
+        }
+      } catch (err) {
+        console.error("Error creating markers:", err);
+      }
+    };
+
+    updateMarkers();
+  }, [salons, onMarkerClick, selectedSalonId]);
+
+  // Highlight selected marker with animation
   useEffect(() => {
     if (!selectedSalonId) return;
 
     markersRef.current.forEach((marker, salonId) => {
+      const content = marker.content as HTMLElement;
+      
       if (salonId === selectedSalonId) {
-        marker.setIcon({
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 14,
-          fillColor: "#e91e63",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 4,
-        });
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(() => marker.setAnimation(null), 1500);
+        // Add selected styling and bounce animation
+        content.classList.add("selected", "bounce");
+        marker.zIndex = 1000;
+
+        // Remove bounce animation after it completes
+        setTimeout(() => {
+          content.classList.remove("bounce");
+        }, 600);
 
         // Pan to marker
-        const position = marker.getPosition();
-        if (position && mapInstanceRef.current) {
-          mapInstanceRef.current.panTo(position);
+        if (marker.position && mapInstanceRef.current) {
+          mapInstanceRef.current.panTo(marker.position as google.maps.LatLngLiteral);
           mapInstanceRef.current.setZoom(13);
         }
       } else {
-        marker.setIcon({
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: "#e91e63",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-        });
+        // Remove selected styling
+        content.classList.remove("selected", "bounce");
+        marker.zIndex = null;
       }
     });
   }, [selectedSalonId]);
 
   if (error) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-muted">
-        <p className="text-destructive">{error}</p>
+      <div className="w-full h-full flex items-center justify-center bg-muted" data-testid="map-error">
+        <div className="text-center p-6">
+          <p className="text-destructive font-medium mb-2">Map Loading Error</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
       </div>
     );
   }
@@ -161,7 +178,7 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       )}
-      <div ref={mapRef} className="w-full h-full" data-testid="map-container" />
+      <div ref={mapRef} className="w-full h-full" data-testid="google-map" />
     </div>
   );
 }
