@@ -1,47 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { fetchCertifications, fetchStylists, fetchSalons } from "./airtable";
-import { geocodeAddress, buildFullAddress } from "./geocoding";
-import { Salon, DirectoryData } from "@shared/schema";
+import { DirectoryData } from "@shared/schema";
 import { getCachedDirectory, setCachedDirectory, clearCache, getCacheStats } from "./cache";
+import { storage } from "./storage";
 
 export async function fetchDirectoryData(): Promise<DirectoryData> {
-  const certMap = await fetchCertifications();
-  const stylistsBySalon = await fetchStylists(certMap);
-  const airtableSalons = await fetchSalons();
-
-  const salons: Salon[] = await Promise.all(
-    airtableSalons.map(async (airtableSalon) => {
-      const fields = airtableSalon.fields;
-      const fullAddress = buildFullAddress(fields);
-      const coords = await geocodeAddress(fullAddress);
-      const stylists = stylistsBySalon.get(airtableSalon.id) || [];
-
-      return {
-        id: airtableSalon.id,
-        name: fields["Salon Name"],
-        address: fullAddress,
-        city: fields.City,
-        state: fields.State,
-        zip: fields["ZIP Code"],
-        phone: fields["Phone Number"],
-        website: fields.Website,
-        photo: fields["Salon Photo"]?.[0]?.url,
-        lat: coords.lat,
-        lng: coords.lng,
-        stylists,
-      };
-    })
-  );
-
-  const salonsWithStylists = salons.filter(
-    (salon) => salon.stylists.length > 0
-  );
-
-  return {
-    salons: salonsWithStylists,
-    certifications: Array.from(certMap.values()),
-  };
+  return await storage.getDirectory();
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -58,8 +22,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(cachedData);
       }
 
-      // Cache miss - fetch from Airtable
-      console.log('[api] GET /api/directory - CACHE MISS, fetching from Airtable...');
+      // Cache miss - fetch from PostgreSQL
+      console.log('[api] GET /api/directory - CACHE MISS, fetching from PostgreSQL...');
       const response = await fetchDirectoryData();
 
       // Store in cache before returning
