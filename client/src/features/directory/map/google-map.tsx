@@ -13,7 +13,6 @@ interface GoogleMapProps {
 // Configure API loader once
 setOptions({
   key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-  version: "weekly",
 });
 
 export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: GoogleMapProps) {
