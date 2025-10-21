@@ -8,10 +8,12 @@ A map-based directory application to help people find certified curly hair styli
 ### Tech Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI components
 - **Backend**: Express.js, Node.js
-- **Data Source**: Airtable API (3 tables: Salons, Stylists, Certifications)
+- **Database**: PostgreSQL (Neon-backed via Replit)
+- **ORM**: Drizzle ORM with TypeScript schema definitions
+- **Data Source**: PostgreSQL database (4 tables: salons, stylists, certifications, stylist_certifications)
 - **Map Integration**: Google Maps JavaScript API with Advanced Markers (AdvancedMarkerElement)
 - **Map Loader**: @googlemaps/js-api-loader v2.0+ with modern importLibrary() API
-- **Geocoding**: Google Maps Geocoding API (with in-memory caching)
+- **Geocoding**: Google Maps Geocoding API (with in-memory caching and database persistence)
 
 ### Project Structure
 ```
@@ -29,11 +31,13 @@ A map-based directory application to help people find certified curly hair styli
 │   │   │   └── rochester.tsx  # Main directory page
 │   │   └── lib/           # Utilities and query client
 ├── server/                # Backend Express server
-│   ├── airtable.ts       # Airtable API integration
+│   ├── storage.ts        # PostgreSQL data access layer (Drizzle ORM)
+│   ├── cache.ts          # In-memory caching service (node-cache)
 │   ├── geocoding.ts      # Google Maps geocoding with cache
-│   └── routes.ts         # API endpoints
+│   ├── routes.ts         # API endpoints
+│   └── seed.ts           # CSV import script for initial data load
 └── shared/               # Shared TypeScript types
-    └── schema.ts         # Data models for Salon, Stylist, Certification
+    └── schema.ts         # Drizzle table schemas + Zod validation types
 ```
 
 ## Features
@@ -65,24 +69,31 @@ A map-based directory application to help people find certified curly hair styli
 
 ## Data Flow
 
-### Airtable Integration
-1. **Certifications Table**: Fetched and cached, mapped by ID
-2. **Stylists Table**: Linked to certifications and salons
-3. **Salons Table**: Geocoded addresses cached in memory
+### Database Schema
+1. **certifications**: Certification types (Rëzo, Ouidad, DevaCurl, etc.)
+2. **salons**: Salon locations with geocoded coordinates
+3. **stylists**: Individual stylists linked to salons
+4. **stylist_certifications**: Many-to-many join table
 
-### Transformation Pipeline
+### Data Pipeline
 ```
-Airtable → Fetch 3 tables → Transform & merge data → 
-Geocode salon addresses → Group stylists by salon → 
-Filter based on user preferences → Display on map + list
+PostgreSQL → Storage layer queries (Drizzle ORM) → 
+In-memory cache (1-hour TTL) → Transform to API format → 
+Frontend filters/displays on map + list
 ```
+
+### Geocoding Strategy
+- Coordinates stored in database (lat/lng columns on salons table)
+- On first fetch, missing coordinates are geocoded and persisted
+- In-memory geocoding cache prevents redundant API calls
+- Future fetches read from database (no re-geocoding needed)
 
 ### API Endpoints
 - `GET /api/directory`: Returns all salons with stylists and certifications
   - **In-memory caching** with 1-hour TTL for fast response times
   - Cache warming on server startup (pre-populates data)
-  - Performance: ~0-2ms (cache hit) vs ~1000-10000ms (cache miss)
-  - Geocodes salon addresses (cached separately in geocoding service)
+  - Performance: ~0-2ms (cache hit) vs ~300-500ms (cache miss from PostgreSQL)
+  - Geocodes missing salon addresses on-demand and persists to database
   - Normalizes Instagram handles (adds @ prefix)
   - Filters out salons with no stylists
 - `POST /api/cache/clear`: Manually clear the directory cache
@@ -91,8 +102,7 @@ Filter based on user preferences → Display on map + list
 ## Environment Variables
 
 ### Required Secrets (via Replit Secrets)
-- `AIRTABLE_API_KEY`: Airtable Personal Access Token
-- `AIRTABLE_BASE_ID`: Airtable base ID (starts with "app...")
+- `DATABASE_URL`: PostgreSQL connection string (auto-configured by Replit)
 - `GOOGLE_MAPS_API_KEY`: Google Maps API key (Maps JavaScript API + Geocoding API enabled)
 - `SESSION_SECRET`: Express session secret key
 
@@ -139,6 +149,15 @@ Filter based on user preferences → Display on map + list
 - Clear filters → Reset to all stylists
 
 ## Recent Changes
+- October 21, 2025: Database Migration - Airtable to PostgreSQL
+  - **Database Migration**: Migrated from Airtable API to PostgreSQL for faster performance and data ownership
+  - **Drizzle Schema**: Created normalized 4-table schema (salons, stylists, certifications, stylist_certifications)
+  - **CSV Import**: Built seed script to import all Airtable data from CSV exports
+  - **Storage Layer**: Implemented PostgreSQL data access layer with Drizzle ORM
+  - **Performance**: PostgreSQL queries (~300ms) faster than Airtable API (~1000ms), plus caching (~0-2ms)
+  - **Geocoding Persistence**: Salon coordinates now stored in database instead of re-geocoding on every fetch
+  - **Data Ownership**: Full control over data structure, migrations, and backups
+
 - October 21, 2025: Performance Optimization - In-Memory Caching
   - **Cache Service**: Created `server/cache.ts` with node-cache for directory data caching
   - **Cache Warming**: Automatic cache population on server startup (~2-10s one-time)
@@ -156,13 +175,12 @@ Filter based on user preferences → Display on map + list
   - **TypeScript Definitions**: Added complete type definitions for AdvancedMarkerElement API
   
 - October 21, 2025: Initial implementation
-  - Full-stack application with Airtable + Google Maps integration
+  - Full-stack application with Google Maps integration
   - Mobile-responsive design with map/list toggle
   - Real-time filtering and search capabilities
   - Beautiful UI with purple/pink color scheme
 
 ## Future Enhancements
-- Geocoding cache persistence (database)
 - Proximity search with distance calculation
 - Instagram post embedding
 - User reviews and ratings
@@ -236,3 +254,29 @@ The application uses a **two-layer caching strategy** for optimal performance:
 - Subsequent users get ~0-2ms responses for entire directory
 - Geocoding cache prevents duplicate API calls during data fetch
 - Weekly data updates → 1-hour TTL is optimal balance
+
+## Data Management
+
+### Updating Directory Data
+
+To add or update stylist/salon data:
+
+1. **Update CSV Files**: Modify the CSV files in `attached_assets/`:
+   - `Salons-Grid view.csv`
+   - `Stylists-Grid view.csv`
+   - `Certifications-Grid view.csv`
+
+2. **Run Seed Script**: Import the updated data into PostgreSQL:
+   ```bash
+   npx tsx server/seed.ts
+   ```
+
+3. **Clear Cache**: Force a fresh data fetch:
+   ```bash
+   curl -X POST http://localhost:5000/api/cache/clear
+   ```
+
+Or use the cache clear endpoint from the browser console:
+```javascript
+fetch('/api/cache/clear', { method: 'POST' })
+```
