@@ -19,13 +19,24 @@ export default function Rochester() {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
-    certifications: [],
-    onlineBooking: undefined,
+    organizations: [],
     minPrice: undefined,
     maxPrice: undefined,
   });
 
   const { data, isLoading, error } = useDirectory();
+
+  // Extract unique organizations from certifications
+  const organizations = useMemo(() => {
+    if (!data?.certifications) return [];
+    const uniqueOrgs = new Set<string>();
+    data.certifications.forEach(cert => {
+      if (cert.organization) {
+        uniqueOrgs.add(cert.organization);
+      }
+    });
+    return Array.from(uniqueOrgs).sort();
+  }, [data?.certifications]);
 
   // Flatten and filter stylists
   const filteredAndSortedStylists = useMemo(() => {
@@ -36,17 +47,12 @@ export default function Rochester() {
 
     // Filter stylists
     const filtered = allStylists.filter((stylist) => {
-      // Certification filter
-      if (filters.certifications.length > 0) {
-        const hasCert = stylist.certifications.some(cert =>
-          filters.certifications.includes(cert.name)
+      // Organization filter
+      if (filters.organizations.length > 0) {
+        const hasOrg = stylist.certifications.some(cert =>
+          cert.organization && filters.organizations.includes(cert.organization)
         );
-        if (!hasCert) return false;
-      }
-
-      // Online booking filter
-      if (filters.onlineBooking && !stylist.canBookOnline) {
-        return false;
+        if (!hasOrg) return false;
       }
 
       // Price filter
@@ -85,8 +91,7 @@ export default function Rochester() {
   // Count active filters
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (filters.certifications.length > 0) count += filters.certifications.length;
-    if (filters.onlineBooking) count += 1;
+    if (filters.organizations.length > 0) count += filters.organizations.length;
     if (filters.minPrice) count += 1;
     if (filters.maxPrice) count += 1;
     return count;
@@ -158,7 +163,7 @@ export default function Rochester() {
         <aside className="hidden lg:block w-[260px] border-r bg-background overflow-y-auto">
           <div className="p-6 sticky top-0">
             <FilterPanel
-              certifications={data?.certifications || []}
+              organizations={organizations}
               filters={filters}
               onFilterChange={setFilters}
               activeFilterCount={activeFilterCount}
@@ -190,7 +195,7 @@ export default function Rochester() {
                   </SheetHeader>
                   <div className="mt-6">
                     <FilterPanel
-                      certifications={data?.certifications || []}
+                      organizations={organizations}
                       filters={filters}
                       onFilterChange={setFilters}
                       activeFilterCount={activeFilterCount}
@@ -219,8 +224,7 @@ export default function Rochester() {
                 action={{
                   label: "Clear Filters",
                   onClick: () => setFilters({
-                    certifications: [],
-                    onlineBooking: undefined,
+                    organizations: [],
                     minPrice: undefined,
                     maxPrice: undefined,
                   })

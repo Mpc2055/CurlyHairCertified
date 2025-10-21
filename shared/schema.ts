@@ -228,8 +228,7 @@ export type Salon = z.infer<typeof salonSchema>;
 
 // Filter options schema
 export const filterOptionsSchema = z.object({
-  certifications: z.array(z.string()),
-  onlineBooking: z.boolean().optional(),
+  organizations: z.array(z.string()),
   minPrice: z.number().optional(),
   maxPrice: z.number().optional(),
   searchLocation: z.string().optional(),

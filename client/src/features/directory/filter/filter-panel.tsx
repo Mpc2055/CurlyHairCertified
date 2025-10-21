@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FilterOptions, Certification } from "@shared/schema";
+import { FilterOptions } from "@shared/schema";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,28 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { X, MapIcon } from "lucide-react";
 
 interface FilterPanelProps {
-  certifications: Certification[];
+  organizations: string[];
   filters: FilterOptions;
   onFilterChange: (filters: FilterOptions) => void;
   activeFilterCount: number;
   onOpenMap?: () => void;
 }
 
-export function FilterPanel({ certifications, filters, onFilterChange, activeFilterCount, onOpenMap }: FilterPanelProps) {
+export function FilterPanel({ organizations, filters, onFilterChange, activeFilterCount, onOpenMap }: FilterPanelProps) {
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
 
-  const handleCertificationToggle = (certName: string) => {
-    const newCerts = localFilters.certifications.includes(certName)
-      ? localFilters.certifications.filter(c => c !== certName)
-      : [...localFilters.certifications, certName];
-    
-    const updated = { ...localFilters, certifications: newCerts };
-    setLocalFilters(updated);
-    onFilterChange(updated);
-  };
+  const handleOrganizationToggle = (orgName: string) => {
+    const newOrgs = localFilters.organizations.includes(orgName)
+      ? localFilters.organizations.filter(o => o !== orgName)
+      : [...localFilters.organizations, orgName];
 
-  const handleOnlineBookingToggle = (checked: boolean) => {
-    const updated = { ...localFilters, onlineBooking: checked || undefined };
+    const updated = { ...localFilters, organizations: newOrgs };
     setLocalFilters(updated);
     onFilterChange(updated);
   };
@@ -46,8 +40,7 @@ export function FilterPanel({ certifications, filters, onFilterChange, activeFil
 
   const clearAllFilters = () => {
     const cleared: FilterOptions = {
-      certifications: [],
-      onlineBooking: undefined,
+      organizations: [],
       minPrice: undefined,
       maxPrice: undefined,
       searchLocation: undefined,
@@ -75,42 +68,26 @@ export function FilterPanel({ certifications, filters, onFilterChange, activeFil
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Certifications */}
+        {/* Issuing Organizations */}
         <div className="space-y-3">
-          <Label className="text-sm font-semibold">Certifications</Label>
+          <Label className="text-sm font-semibold">Issuing Organization</Label>
           <div className="space-y-2">
-            {certifications.map((cert) => (
-              <div key={cert.id} className="flex items-center gap-2">
+            {organizations.map((org) => (
+              <div key={org} className="flex items-center gap-2">
                 <Checkbox
-                  id={`cert-${cert.id}`}
-                  checked={localFilters.certifications.includes(cert.name)}
-                  onCheckedChange={() => handleCertificationToggle(cert.name)}
-                  data-testid={`checkbox-cert-${cert.id}`}
+                  id={`org-${org}`}
+                  checked={localFilters.organizations.includes(org)}
+                  onCheckedChange={() => handleOrganizationToggle(org)}
+                  data-testid={`checkbox-org-${org}`}
                 />
                 <label
-                  htmlFor={`cert-${cert.id}`}
+                  htmlFor={`org-${org}`}
                   className="text-sm cursor-pointer flex-1"
                 >
-                  {cert.name}
+                  {org}
                 </label>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Online Booking */}
-        <div className="space-y-3">
-          <Label className="text-sm font-semibold">Availability</Label>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="online-booking"
-              checked={localFilters.onlineBooking || false}
-              onCheckedChange={handleOnlineBookingToggle}
-              data-testid="checkbox-online-booking"
-            />
-            <label htmlFor="online-booking" className="text-sm cursor-pointer">
-              Online Booking Available
-            </label>
           </div>
         </div>
 
