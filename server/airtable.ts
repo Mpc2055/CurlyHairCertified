@@ -1,56 +1,52 @@
-import Airtable from "airtable";
-import { Certification, Stylist, Salon } from "@shared/schema";
+import Airtable, { FieldSet, Attachment } from "airtable";
+import { Certification, Stylist } from "@shared/schema";
 
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
   process.env.AIRTABLE_BASE_ID!
 );
 
-interface AirtableCertification {
-  id: string;
-  fields: {
-    "Certification Name": string;
-    "Certification Level"?: string;
-    "Issuing Organization"?: string;
-    Description?: string;
-  };
+interface CertificationFields extends FieldSet {
+  "Certification Name": string;
+  "Certification Level"?: string;
+  "Issuing Organization"?: string;
+  Description?: string;
 }
 
-interface AirtableStylist {
-  id: string;
-  fields: {
-    "Stylist Name": string;
-    Salon?: string[];
-    Phone?: string;
-    Email?: string;
-    Website?: string;
-    "Instagram Handle"?: string;
-    Certifications?: string[];
-    Verified?: boolean;
-    "Profile Photo"?: Array<{ url: string }>;
-    "Online Curly Cut Booking?"?: boolean;
-    "Curly Cut Price"?: number;
-  };
+interface StylistFields extends FieldSet {
+  "Stylist Name": string;
+  Salon?: string[];
+  Phone?: string;
+  Email?: string;
+  Website?: string;
+  "Instagram Handle"?: string;
+  Certifications?: string[];
+  Verified?: boolean;
+  "Profile Photo"?: readonly Attachment[];
+  "Online Curly Cut Booking?"?: boolean;
+  "Curly Cut Price"?: number;
 }
 
-interface AirtableSalon {
+interface SalonFields extends FieldSet {
+  "Salon Name": string;
+  "Street Address": string;
+  "Suite or Unit"?: string;
+  City: string;
+  State: string;
+  "ZIP Code": string;
+  "Phone Number"?: string;
+  Website?: string;
+  "Salon Photo"?: readonly Attachment[];
+}
+
+export interface AirtableSalon {
   id: string;
-  fields: {
-    "Salon Name": string;
-    "Street Address": string;
-    "Suite or Unit"?: string;
-    City: string;
-    State: string;
-    "ZIP Code": string;
-    "Phone Number"?: string;
-    Website?: string;
-    "Salon Photo"?: Array<{ url: string }>;
-  };
+  fields: SalonFields;
 }
 
 export async function fetchCertifications(): Promise<Map<string, Certification>> {
   const certMap = new Map<string, Certification>();
 
-  const records = await base<AirtableCertification>("Certifications")
+  const records = await base<CertificationFields>("Certifications")
     .select()
     .all();
 
@@ -73,7 +69,7 @@ export async function fetchStylists(
 ): Promise<Map<string, Stylist[]>> {
   const stylistsBySalon = new Map<string, Stylist[]>();
 
-  const records = await base<AirtableStylist>("Stylists").select().all();
+  const records = await base<StylistFields>("Stylists").select().all();
 
   records.forEach((record) => {
     const fields = record.fields;
@@ -81,7 +77,7 @@ export async function fetchStylists(
     // Get certifications for this stylist
     const certifications: Certification[] = [];
     if (fields.Certifications) {
-      fields.Certifications.forEach((certId) => {
+      fields.Certifications.forEach((certId: string) => {
         const cert = certMap.get(certId);
         if (cert) certifications.push(cert);
       });
@@ -121,7 +117,7 @@ export async function fetchStylists(
 }
 
 export async function fetchSalons(): Promise<AirtableSalon[]> {
-  const records = await base<AirtableSalon>("Salons").select().all();
+  const records = await base<SalonFields>("Salons").select().all();
   return records.map((record) => ({
     id: record.id,
     fields: record.fields,

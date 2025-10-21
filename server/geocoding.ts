@@ -45,13 +45,15 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
   }
 }
 
-export function buildFullAddress(fields: {
+interface AddressFields {
   "Street Address": string;
   "Suite or Unit"?: string;
   City: string;
   State: string;
   "ZIP Code": string;
-}): string {
+}
+
+export function buildFullAddress(fields: AddressFields): string {
   const parts = [fields["Street Address"]];
   if (fields["Suite or Unit"]) {
     parts[0] += ` ${fields["Suite or Unit"]}`;
