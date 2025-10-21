@@ -21,6 +21,7 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
+  const [isMapReady, setIsMapReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Initialize map
@@ -48,6 +49,7 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
 
         mapInstanceRef.current = map;
         setIsLoading(false);
+        setIsMapReady(true);
       } catch (err) {
         console.error("Map initialization error:", err);
         setError("Failed to load map. Please check your API key configuration.");
@@ -73,10 +75,10 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
     return content;
   };
 
-  // Update markers when salons change
+  // Update markers when salons change or map becomes ready
   useEffect(() => {
     const updateMarkers = async () => {
-      if (!mapInstanceRef.current || salons.length === 0) return;
+      if (!isMapReady || !mapInstanceRef.current || salons.length === 0) return;
 
       try {
         // Import marker library
@@ -122,7 +124,7 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
     };
 
     updateMarkers();
-  }, [salons, onMarkerClick, selectedSalonId]);
+  }, [salons, onMarkerClick, selectedSalonId, isMapReady]);
 
   // Highlight selected marker with animation
   useEffect(() => {
