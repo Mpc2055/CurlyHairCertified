@@ -19,6 +19,12 @@ export const salons = pgTable("salons", {
   lat: numeric("lat"),
   lng: numeric("lng"),
   fullAddress: text("full_address").notNull(),
+  // Google Places integration
+  googlePlaceId: text("google_place_id"),
+  googleRating: text("google_rating"),
+  googleReviewCount: integer("google_review_count"),
+  googleReviewsUrl: text("google_reviews_url"),
+  lastGoogleSync: timestamp("last_google_sync"),
 }, (table) => ({
   cityIdx: index("city_idx").on(table.city),
 }));
@@ -221,6 +227,11 @@ export const salonSchema = z.object({
   photo: z.string().optional(),
   lat: z.number(),
   lng: z.number(),
+  // Google Places data
+  googlePlaceId: z.string().optional(),
+  googleRating: z.number().optional(),
+  googleReviewCount: z.number().optional(),
+  googleReviewsUrl: z.string().optional(),
   stylists: z.array(stylistSchema),
 });
 

@@ -15,6 +15,7 @@ import {
 } from '../shared/schema';
 import type { DirectoryData, Salon, Stylist, Certification } from '../shared/schema';
 import { geocodeAddress } from './geocoding';
+import { findPlaceId, getPlaceDetails } from './google-places';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {
@@ -23,6 +24,9 @@ if (!DATABASE_URL) {
 
 const sql = neon(DATABASE_URL);
 const db = drizzle(sql);
+
+// Constants
+const GOOGLE_SYNC_INTERVAL_DAYS = 7;
 
 // Helper to normalize Instagram handles
 function normalizeInstagram(handle: string | null | undefined): string | undefined {
@@ -163,6 +167,9 @@ export class PostgresStorage implements IStorage {
           }
         }
 
+        // Sync Google Place data if needed
+        await this.syncGooglePlaceData(salon);
+
         // Only include salons with valid coordinates
         if (lat !== null && lng !== null) {
           salonResults.push({
@@ -181,6 +188,11 @@ export class PostgresStorage implements IStorage {
             photo: salon.photo || undefined,
             lat,
             lng,
+            // Google Places data
+            googlePlaceId: salon.googlePlaceId || undefined,
+            googleRating: salon.googleRating ? parseFloat(salon.googleRating) : undefined,
+            googleReviewCount: salon.googleReviewCount || undefined,
+            googleReviewsUrl: salon.googleReviewsUrl || undefined,
             stylists: salonStylists,
           });
         }
@@ -392,6 +404,99 @@ export class PostgresStorage implements IStorage {
     }
 
     return results.sort((a, b) => b.mentionCount - a.mentionCount);
+  }
+
+  /**
+   * Sync Google Place data for a salon if missing or stale
+   */
+  private async syncGooglePlaceData(salon: any): Promise<void> {
+    try {
+      const needsSync = this.shouldSyncGoogleData(salon);
+
+      if (!needsSync) {
+        return;
+      }
+
+      console.log(`[storage] Syncing Google Place data for: ${salon.name}`);
+
+      // Step 1: Get Place ID if missing
+      let placeId = salon.googlePlaceId;
+      if (!placeId || placeId === '') {
+        const result = await findPlaceId(salon.name, salon.fullAddress);
+        placeId = result.placeId;
+
+        if (!placeId) {
+          console.warn(`[storage] Could not find Place ID for: ${salon.name}`);
+          // Mark as attempted to avoid repeated lookups
+          await db
+            .update(salons)
+            .set({
+              googlePlaceId: 'NOT_FOUND',
+              lastGoogleSync: new Date(),
+            })
+            .where(eq(salons.id, salon.id));
+          return;
+        }
+
+        // Save Place ID
+        await db
+          .update(salons)
+          .set({ googlePlaceId: placeId })
+          .where(eq(salons.id, salon.id));
+
+        salon.googlePlaceId = placeId;
+      }
+
+      // Step 2: Get Place Details (rating, reviews)
+      if (placeId && placeId !== 'NOT_FOUND') {
+        const details = await getPlaceDetails(placeId);
+
+        if (details) {
+          await db
+            .update(salons)
+            .set({
+              googleRating: details.rating?.toString(),
+              googleReviewCount: details.reviewCount,
+              googleReviewsUrl: details.reviewsUrl,
+              lastGoogleSync: new Date(),
+            })
+            .where(eq(salons.id, salon.id));
+
+          // Update in-memory object
+          salon.googleRating = details.rating?.toString();
+          salon.googleReviewCount = details.reviewCount;
+          salon.googleReviewsUrl = details.reviewsUrl;
+          salon.lastGoogleSync = new Date();
+        }
+      }
+    } catch (error) {
+      console.error(`[storage] Error syncing Google data for ${salon.name}:`, error);
+      // Don't throw - continue with other salons
+    }
+  }
+
+  /**
+   * Determine if salon needs Google data sync
+   */
+  private shouldSyncGoogleData(salon: any): boolean {
+    // Never synced - needs sync
+    if (!salon.googlePlaceId) {
+      return true;
+    }
+
+    // Previously failed to find - don't retry
+    if (salon.googlePlaceId === 'NOT_FOUND') {
+      return false;
+    }
+
+    // Check if last sync was more than 7 days ago
+    if (salon.lastGoogleSync) {
+      const daysSinceSync = (Date.now() - new Date(salon.lastGoogleSync).getTime()) / (1000 * 60 * 60 * 24);
+      return daysSinceSync > GOOGLE_SYNC_INTERVAL_DAYS;
+    }
+
+    // Has Place ID but no sync timestamp - needs sync
+    return true;
   }
 }
 
