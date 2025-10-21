@@ -6,16 +6,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, MapIcon } from "lucide-react";
 
 interface FilterPanelProps {
   certifications: Certification[];
   filters: FilterOptions;
   onFilterChange: (filters: FilterOptions) => void;
   activeFilterCount: number;
+  onOpenMap?: () => void;
 }
 
-export function FilterPanel({ certifications, filters, onFilterChange, activeFilterCount }: FilterPanelProps) {
+export function FilterPanel({ certifications, filters, onFilterChange, activeFilterCount, onOpenMap }: FilterPanelProps) {
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
 
   const handleCertificationToggle = (certName: string) => {
@@ -138,6 +139,21 @@ export function FilterPanel({ certifications, filters, onFilterChange, activeFil
             </div>
           </div>
         </div>
+
+        {/* Map Button */}
+        {onOpenMap && (
+          <div className="pt-6 border-t">
+            <Button
+              variant="outline"
+              className="w-full gap-2"
+              onClick={onOpenMap}
+              data-testid="button-open-map"
+            >
+              <MapIcon className="w-4 h-4" />
+              View Map
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

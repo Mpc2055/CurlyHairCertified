@@ -146,7 +146,7 @@ export function GoogleMap({ salons, selectedSalonId, onMarkerClick, center }: Go
         // Pan to marker
         if (marker.position && mapInstanceRef.current) {
           mapInstanceRef.current.panTo(marker.position as google.maps.LatLngLiteral);
-          mapInstanceRef.current.setZoom(13);
+          mapInstanceRef.current.setZoom(15);
         }
       } else {
         // Remove selected styling
