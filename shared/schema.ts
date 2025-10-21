@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { pgTable, text, boolean, numeric, index, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, numeric, index, primaryKey, serial, timestamp, integer } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -56,6 +56,42 @@ export const stylistCertifications = pgTable("stylist_certifications", {
   certificationIdx: index("stylist_cert_certification_idx").on(table.certificationId),
 }));
 
+// ========== Forum Tables ==========
+
+export const topics = pgTable("topics", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  authorName: text("author_name"),
+  authorEmail: text("author_email"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  upvotesCount: integer("upvotes_count").notNull().default(0),
+  repliesCount: integer("replies_count").notNull().default(0),
+  flagCount: integer("flag_count").notNull().default(0),
+  tags: text("tags").array().notNull().default([]),
+  mentionedStylistIds: text("mentioned_stylist_ids").array().notNull().default([]),
+}, (table) => ({
+  updatedAtIdx: index("topics_updated_at_idx").on(table.updatedAt),
+  createdAtIdx: index("topics_created_at_idx").on(table.createdAt),
+  flagCountIdx: index("topics_flag_count_idx").on(table.flagCount),
+}));
+
+export const replies = pgTable("replies", {
+  id: serial("id").primaryKey(),
+  topicId: integer("topic_id").notNull().references(() => topics.id, { onDelete: 'cascade' }),
+  parentReplyId: integer("parent_reply_id"),
+  content: text("content").notNull(),
+  authorName: text("author_name"),
+  authorEmail: text("author_email"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  flagCount: integer("flag_count").notNull().default(0),
+}, (table) => ({
+  topicIdx: index("replies_topic_idx").on(table.topicId),
+  parentIdx: index("replies_parent_idx").on(table.parentReplyId),
+  createdAtIdx: index("replies_created_at_idx").on(table.createdAt),
+}));
+
 // ========== Drizzle Relations ==========
 
 export const salonsRelations = relations(salons, ({ many }) => ({
@@ -85,12 +121,42 @@ export const stylistCertificationsRelations = relations(stylistCertifications, (
   }),
 }));
 
+export const topicsRelations = relations(topics, ({ many }) => ({
+  replies: many(replies),
+}));
+
+export const repliesRelations = relations(replies, ({ one, many }) => ({
+  topic: one(topics, {
+    fields: [replies.topicId],
+    references: [topics.id],
+  }),
+  parentReply: one(replies, {
+    fields: [replies.parentReplyId],
+    references: [replies.id],
+  }),
+  childReplies: many(replies),
+}));
+
 // ========== Drizzle Insert Schemas ==========
 
 export const insertSalonSchema = createInsertSchema(salons);
 export const insertCertificationSchema = createInsertSchema(certifications);
 export const insertStylistSchema = createInsertSchema(stylists);
 export const insertStylistCertificationSchema = createInsertSchema(stylistCertifications);
+
+export const insertTopicSchema = createInsertSchema(topics).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  upvotesCount: true,
+  repliesCount: true,
+  flagCount: true 
+});
+export const insertReplySchema = createInsertSchema(replies).omit({ 
+  id: true, 
+  createdAt: true,
+  flagCount: true 
+});
 
 // ========== TypeScript Types ==========
 
@@ -105,6 +171,12 @@ export type SelectStylist = typeof stylists.$inferSelect;
 
 export type InsertStylistCertification = typeof stylistCertifications.$inferInsert;
 export type SelectStylistCertification = typeof stylistCertifications.$inferSelect;
+
+export type InsertTopic = z.infer<typeof insertTopicSchema>;
+export type SelectTopic = typeof topics.$inferSelect;
+
+export type InsertReply = z.infer<typeof insertReplySchema>;
+export type SelectReply = typeof replies.$inferSelect;
 
 // ========== API Response Schemas (Zod) ==========
 

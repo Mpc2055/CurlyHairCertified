@@ -1,11 +1,17 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq } from 'drizzle-orm';
+import { eq, desc, sql as drizzleSql, and, arrayContains, ilike } from 'drizzle-orm';
 import {
   salons,
   stylists,
   certifications,
   stylistCertifications,
+  topics,
+  replies,
+  type InsertTopic,
+  type InsertReply,
+  type SelectTopic,
+  type SelectReply,
 } from '../shared/schema';
 import type { DirectoryData, Salon, Stylist, Certification } from '../shared/schema';
 import { geocodeAddress } from './geocoding';
@@ -32,8 +38,38 @@ function normalizeInstagram(handle: string | null | undefined): string | undefin
   return primaryHandle.startsWith('@') ? primaryHandle : `@${primaryHandle}`;
 }
 
+export interface TopicWithReplies extends SelectTopic {
+  replies: ReplyWithChildren[];
+}
+
+export interface ReplyWithChildren extends SelectReply {
+  children: SelectReply[];
+}
+
+export interface MentionStats {
+  stylistId: string;
+  stylistName: string;
+  mentionCount: number;
+  recentTopics: { id: number; title: string; createdAt: Date }[];
+}
+
 export interface IStorage {
   getDirectory(): Promise<DirectoryData>;
+  
+  // Forum operations
+  createTopic(topic: InsertTopic): Promise<SelectTopic>;
+  getTopics(options: {
+    sortBy?: 'recent' | 'replies' | 'newest';
+    tags?: string[];
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<SelectTopic[]>;
+  getTopicById(id: number): Promise<TopicWithReplies | null>;
+  createReply(reply: InsertReply): Promise<SelectReply>;
+  flagContent(contentType: 'topic' | 'reply', contentId: number): Promise<void>;
+  upvoteTopic(topicId: number): Promise<void>;
+  getMentionAnalytics(): Promise<MentionStats[]>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -154,6 +190,204 @@ export class PostgresStorage implements IStorage {
       console.error('[storage] Error fetching directory data:', error);
       throw error;
     }
+  }
+
+  async createTopic(topic: InsertTopic): Promise<SelectTopic> {
+    const [newTopic] = await db.insert(topics).values(topic).returning();
+    return newTopic;
+  }
+
+  async getTopics(options: {
+    sortBy?: 'recent' | 'replies' | 'newest';
+    tags?: string[];
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<SelectTopic[]> {
+    // Build where conditions
+    const conditions = [];
+    
+    // Filter out flagged content (flag_count >= 5)
+    conditions.push(drizzleSql`${topics.flagCount} < 5`);
+
+    // Tag filtering
+    if (options.tags && options.tags.length > 0) {
+      conditions.push(drizzleSql`${topics.tags} && ARRAY[${drizzleSql.join(
+        options.tags.map(tag => drizzleSql`${tag}`),
+        drizzleSql`, `
+      )}]::text[]`);
+    }
+
+    // Search filtering
+    if (options.search) {
+      conditions.push(
+        drizzleSql`(${topics.title} ILIKE ${'%' + options.search + '%'} OR ${topics.content} ILIKE ${'%' + options.search + '%'})`
+      );
+    }
+
+    // Build query with all conditions
+    let query = db
+      .select()
+      .from(topics)
+      .where(drizzleSql`${drizzleSql.join(conditions, drizzleSql` AND `)}`);
+
+    // Add sorting
+    if (options.sortBy === 'replies') {
+      query = query.orderBy(desc(topics.repliesCount), desc(topics.updatedAt)) as any;
+    } else if (options.sortBy === 'newest') {
+      query = query.orderBy(desc(topics.createdAt)) as any;
+    } else {
+      query = query.orderBy(desc(topics.updatedAt)) as any;
+    }
+
+    // Add pagination
+    if (options.limit) {
+      query = query.limit(options.limit) as any;
+    }
+    if (options.offset) {
+      query = query.offset(options.offset) as any;
+    }
+
+    return await query;
+  }
+
+  async getTopicById(id: number): Promise<TopicWithReplies | null> {
+    const topicResults = await db.select().from(topics).where(eq(topics.id, id));
+    const topic = topicResults[0];
+    if (!topic) return null;
+
+    // Get all replies for this topic
+    const allReplies = await db
+      .select()
+      .from(replies)
+      .where(and(
+        eq(replies.topicId, id),
+        drizzleSql`${replies.flagCount} < 5` // Filter out flagged replies
+      ))
+      .orderBy(replies.createdAt);
+
+    // Build threaded structure
+    const topLevelReplies: ReplyWithChildren[] = [];
+    const replyMap = new Map<number, ReplyWithChildren>();
+
+    // First pass: create all reply objects
+    for (const reply of allReplies) {
+      replyMap.set(reply.id, { ...reply, children: [] });
+    }
+
+    // Second pass: build tree structure
+    for (const reply of allReplies) {
+      const replyWithChildren = replyMap.get(reply.id)!;
+      
+      if (reply.parentReplyId) {
+        const parent = replyMap.get(reply.parentReplyId);
+        if (parent) {
+          parent.children.push(replyWithChildren);
+        }
+      } else {
+        topLevelReplies.push(replyWithChildren);
+      }
+    }
+
+    return {
+      ...topic,
+      replies: topLevelReplies,
+    };
+  }
+
+  async createReply(reply: InsertReply): Promise<SelectReply> {
+    // Validate max nesting depth (2 levels: topic -> reply -> sub-reply)
+    if (reply.parentReplyId) {
+      const parentReplies = await db
+        .select()
+        .from(replies)
+        .where(eq(replies.id, reply.parentReplyId));
+      
+      const parentReply = parentReplies[0];
+      if (parentReply && parentReply.parentReplyId) {
+        throw new Error('Maximum nesting depth of 2 levels exceeded');
+      }
+    }
+
+    const newReplies = await db.insert(replies).values(reply).returning();
+    const newReply = newReplies[0];
+
+    // Update topic's reply count and updated_at
+    await db
+      .update(topics)
+      .set({
+        repliesCount: drizzleSql`${topics.repliesCount} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(topics.id, reply.topicId));
+
+    return newReply;
+  }
+
+  async flagContent(contentType: 'topic' | 'reply', contentId: number): Promise<void> {
+    const table = contentType === 'topic' ? topics : replies;
+    const idField = contentType === 'topic' ? topics.id : replies.id;
+    const flagField = contentType === 'topic' ? topics.flagCount : replies.flagCount;
+
+    await db
+      .update(table)
+      .set({ flagCount: drizzleSql`${flagField} + 1` })
+      .where(eq(idField, contentId));
+  }
+
+  async upvoteTopic(topicId: number): Promise<void> {
+    await db
+      .update(topics)
+      .set({ upvotesCount: drizzleSql`${topics.upvotesCount} + 1` })
+      .where(eq(topics.id, topicId));
+  }
+
+  async getMentionAnalytics(): Promise<MentionStats[]> {
+    // Get all topics with mentions
+    const topicsWithMentions = await db
+      .select()
+      .from(topics)
+      .where(drizzleSql`array_length(${topics.mentionedStylistIds}, 1) > 0`)
+      .orderBy(desc(topics.createdAt));
+
+    // Get all stylists for name lookup
+    const allStylists = await db.select().from(stylists);
+    const stylistMap = new Map(allStylists.map(s => [s.id, s.name]));
+
+    // Build mention statistics
+    const mentionCounts = new Map<string, {
+      count: number;
+      topics: { id: number; title: string; createdAt: Date }[];
+    }>();
+
+    for (const topic of topicsWithMentions) {
+      for (const stylistId of topic.mentionedStylistIds) {
+        if (!mentionCounts.has(stylistId)) {
+          mentionCounts.set(stylistId, { count: 0, topics: [] });
+        }
+        const stats = mentionCounts.get(stylistId)!;
+        stats.count++;
+        stats.topics.push({
+          id: topic.id,
+          title: topic.title,
+          createdAt: topic.createdAt,
+        });
+      }
+    }
+
+    // Convert to array and sort by mention count
+    const results: MentionStats[] = [];
+    for (const [stylistId, stats] of Array.from(mentionCounts.entries())) {
+      const stylistName = stylistMap.get(stylistId) || 'Unknown';
+      results.push({
+        stylistId,
+        stylistName,
+        mentionCount: stats.count,
+        recentTopics: stats.topics.slice(0, 5), // Top 5 recent mentions
+      });
+    }
+
+    return results.sort((a, b) => b.mentionCount - a.mentionCount);
   }
 }
 

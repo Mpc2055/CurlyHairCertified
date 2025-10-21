@@ -1,0 +1,79 @@
+Build a community discussion forum with these specifications:
+
+DATABASE SCHEMA:
+- topics table: id, title, content, author_name (optional), author_email (optional), 
+  created_at, updated_at, upvotes_count, replies_count, tags (array), 
+  mentioned_stylist_ids (array), flag_count (default 0)
+- replies table: id, topic_id, parent_reply_id (for threading), content, 
+  author_name (optional), author_email (optional), created_at, flag_count (default 0)
+- topic_tags table: id, name, category (city/hair-type/stylist/general)
+
+SPAM PROTECTION (automated - no manual moderation needed):
+- Rate limiting: 5 posts per IP per hour (in-memory cache)
+- Content validation: minimum 20 chars, maximum 5000 chars
+- Duplicate detection: reject if same content posted in last 24 hours
+- Auto-reject posts with common spam keywords
+- Community flags: auto-hide content when flag_count >= 5
+- Structure the post submission endpoint so Cloudflare Turnstile verification 
+  can be easily added later (just add token parameter and verification call 
+  before other checks)
+
+THREADING:
+- Maximum 2 levels deep (topic → reply → sub-reply only)
+- No nesting beyond that
+
+STYLIST MENTIONS:
+- Auto-detect stylist names from existing database using fuzzy matching
+- Store detected stylist IDs in mentioned_stylist_ids array
+- Build analytics view showing:
+  * Most-mentioned stylists (with count)
+  * Recent mentions timeline
+  * Topics per stylist
+
+USER IDENTITY:
+- Optional author_name and author_email fields on posts
+- No verification required
+- No user accounts or authentication
+- Email not displayed publicly (only visible to poster if they provided it)
+
+COMMUNITY MODERATION:
+- Add "Flag" button on all topics and replies
+- Increment flag_count when flagged
+- Auto-hide content when flag_count >= 5 (soft delete, not permanent)
+- NO admin panel needed in MVP
+- Display flag button with simple dropdown reasons: spam, inappropriate, 
+  off-topic, other
+
+SORTING OPTIONS:
+- Recent activity (default - based on last reply time)
+- Most replies
+- Newest first
+
+FEATURES TO INCLUDE:
+- Upvote/downvote on topics (simple count, no tracking who voted)
+- Tag/category filtering (by city, hair type, etc.)
+- Search topics by keyword
+- Link detected stylist mentions to their profile pages on my site
+
+PAGES NEEDED:
+- /forum - Topic list with filters and sorting options
+- /forum/new - Create new topic form
+- /forum/[topicId] - Topic detail with threaded replies
+- /analytics/mentions - Stylist mention analytics dashboard
+
+TECHNICAL IMPLEMENTATION:
+- Use PostgreSQL database (Replit's managed Postgres)
+- React frontend with responsive mobile design
+- RESTful API endpoints for all operations
+- Clean, minimal UI design
+- Fast page loads
+
+API ENDPOINTS NEEDED:
+- GET /api/forum/topics - List topics (with sorting/filtering)
+- POST /api/forum/topics - Create topic (with spam checks)
+- GET /api/forum/topics/:id - Get topic with threaded replies
+- POST /api/forum/topics/:id/reply - Add reply
+- POST /api/forum/flag - Flag content
+- POST /api/forum/upvote - Upvote topic
+- GET /api/forum/tags - Get all tags
+- GET /api/analytics/mentions - Get stylist mention statistics
