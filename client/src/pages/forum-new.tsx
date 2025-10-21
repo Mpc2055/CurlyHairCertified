@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Navigation } from "@/components/navigation";
 
 const formSchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters").max(200, "Title must be less than 200 characters"),
@@ -80,9 +81,11 @@ export default function ForumNew() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <Navigation />
+      
+      {/* Page Header */}
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
             <Link href="/forum">
               <Button variant="ghost" size="icon" data-testid="button-back">
@@ -95,7 +98,7 @@ export default function ForumNew() {
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <Card>

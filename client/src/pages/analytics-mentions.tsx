@@ -3,8 +3,9 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import type { MentionStats } from "server/storage";
+import { Navigation } from "@/components/navigation";
 
 export default function AnalyticsMentions() {
   const { data: mentions, isLoading } = useQuery<MentionStats[]>({
@@ -20,22 +21,20 @@ export default function AnalyticsMentions() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link href="/forum">
-              <Button variant="ghost" size="icon" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
+      <Navigation />
+      
+      {/* Page Header */}
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-2xl font-bold">Stylist Mentions Analytics</h1>
-              <p className="text-sm text-muted-foreground">See which stylists are trending in discussions</p>
+              <h1 className="text-3xl font-bold">Stylist Mentions Analytics</h1>
+              <p className="text-muted-foreground mt-1">See which stylists are trending in community discussions</p>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {isLoading ? (

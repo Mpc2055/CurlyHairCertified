@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, ThumbsUp, Plus, Search, ArrowLeft } from "lucide-react";
+import { MessageSquare, ThumbsUp, Plus, Search } from "lucide-react";
 import { SelectTopic } from "@shared/schema";
+import { Navigation } from "@/components/navigation";
 
 export default function Forum() {
   const [sortBy, setSortBy] = useState<'recent' | 'replies' | 'newest'>('recent');
@@ -33,28 +34,25 @@ export default function Forum() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="icon" data-testid="button-back">
-                <ArrowLeft className="h-5 w-5" />
+      <Navigation />
+      
+      {/* Page Header */}
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Community Forum</h1>
+              <p className="text-muted-foreground mt-1">Share experiences and ask questions about curly hair care</p>
+            </div>
+            <Link href="/forum/new">
+              <Button data-testid="button-new-topic" size="lg">
+                <Plus className="h-4 w-4 mr-2" />
+                New Topic
               </Button>
             </Link>
-            <div>
-              <h1 className="text-2xl font-bold">Community Forum</h1>
-              <p className="text-sm text-muted-foreground">Share experiences and ask questions</p>
-            </div>
           </div>
-          <Link href="/forum/new">
-            <Button data-testid="button-new-topic">
-              <Plus className="h-4 w-4 mr-2" />
-              New Topic
-            </Button>
-          </Link>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters and Search */}

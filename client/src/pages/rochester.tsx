@@ -7,7 +7,7 @@ import { SearchBar } from "@/components/search/search-bar";
 import { SalonGroup } from "@/components/salon/salon-group";
 import { Button } from "@/components/ui/button";
 import { Loader2, Map, List } from "lucide-react";
-import { Link } from "wouter";
+import { Navigation } from "@/components/navigation";
 
 export default function Rochester() {
   const [selectedSalonId, setSelectedSalonId] = useState<string>();
@@ -107,23 +107,18 @@ export default function Rochester() {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="border-b bg-background px-6 py-4 flex-shrink-0">
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/">
-            <h1 className="text-2xl font-bold text-primary cursor-pointer hover-elevate px-3 py-1 rounded-lg" data-testid="link-home">
-              Curly Hair Certified
-            </h1>
-          </Link>
-          <div className="flex-1 max-w-2xl">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onSearch={handleSearch}
-            />
-          </div>
+      <Navigation />
+      
+      {/* Search Bar */}
+      <div className="border-b bg-background px-6 py-4 flex-shrink-0">
+        <div className="max-w-2xl mx-auto">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSearch={handleSearch}
+          />
         </div>
-      </header>
+      </div>
 
       {/* Mobile View Toggle */}
       <div className="md:hidden border-b bg-background p-2 flex gap-2">

@@ -21,6 +21,7 @@ import { ArrowLeft, MessageSquare, ThumbsUp, Flag, MoreVertical } from "lucide-r
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { TopicWithReplies, ReplyWithChildren } from "server/storage";
 import type { SelectReply } from "@shared/schema";
+import { Navigation } from "@/components/navigation";
 
 const replyFormSchema = z.object({
   content: z.string().min(20, "Reply must be at least 20 characters").max(5000),
@@ -288,16 +289,18 @@ export default function ForumTopic() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <Navigation />
+      
+      {/* Page Header */}
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-4 py-6">
           <Link href="/forum">
             <Button variant="ghost" size="icon" data-testid="button-back">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {isLoading ? (
