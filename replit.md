@@ -9,7 +9,8 @@ A map-based directory application to help people find certified curly hair styli
 - **Frontend**: React, TypeScript, Tailwind CSS, Shadcn UI components
 - **Backend**: Express.js, Node.js
 - **Data Source**: Airtable API (3 tables: Salons, Stylists, Certifications)
-- **Map Integration**: Google Maps JavaScript API
+- **Map Integration**: Google Maps JavaScript API with Advanced Markers (AdvancedMarkerElement)
+- **Map Loader**: @googlemaps/js-api-loader v2.0+ with modern importLibrary() API
 - **Geocoding**: Google Maps Geocoding API (with in-memory caching)
 
 ### Project Structure
@@ -43,10 +44,13 @@ A map-based directory application to help people find certified curly hair styli
 - Call-to-action button to Rochester directory
 
 ### Rochester Directory (/roc)
-- **Interactive Map**: Google Maps with custom markers showing salon locations
-  - One pin per salon with stylist count badge
-  - Click pin to highlight corresponding list item
-  - Markers bounce and zoom when selected
+- **Interactive Map**: Google Maps with AdvancedMarkerElement custom HTML markers
+  - Custom circular pink markers (44px) with white borders
+  - Stylist count badge displayed in marker center
+  - Hover effect: Scale transform to 1.1x
+  - Selected state: Grows to 52px with darker pink color and bounce animation
+  - Click marker to highlight corresponding salon in list
+  - Smooth pan and zoom when marker selected
 - **List View**: Scrollable list of stylists grouped by salon
   - Stylist cards with photos, certifications, price, contact info
   - Instagram, website, phone, email links
@@ -126,6 +130,14 @@ Filter based on user preferences → Display on map + list
 - Clear filters → Reset to all stylists
 
 ## Recent Changes
+- October 21, 2025: Google Maps Modernization
+  - **Migrated to Advanced Markers**: Replaced deprecated `google.maps.Marker` with `google.maps.marker.AdvancedMarkerElement` (66% faster performance)
+  - **Modern API Loader**: Upgraded to @googlemaps/js-api-loader v2.0+ using `setOptions()` and `importLibrary()` pattern
+  - **Custom HTML Markers**: Built custom circular markers with HTML/CSS instead of icon-based markers
+  - **CSS Animations**: Added smooth hover effects (scale 1.1x) and bounce animation on selection
+  - **Map ID Integration**: Configured with Map ID for Advanced Markers compatibility
+  - **TypeScript Definitions**: Added complete type definitions for AdvancedMarkerElement API
+  
 - October 21, 2025: Initial implementation
   - Full-stack application with Airtable + Google Maps integration
   - Mobile-responsive design with map/list toggle
@@ -139,3 +151,35 @@ Filter based on user preferences → Display on map + list
 - User reviews and ratings
 - Multi-city expansion
 - Admin panel for data management
+
+## Technical Notes
+
+### Google Maps Configuration Requirements
+To use the Advanced Markers implementation, ensure your Google Cloud Project has:
+
+1. **APIs Enabled**:
+   - Maps JavaScript API
+   - Geocoding API
+
+2. **Map ID Created**:
+   - Create a Map ID in Google Cloud Console (Cloud Maps Platform)
+   - The current implementation uses `CURLY_HAIR_CERTIFIED_MAP` as the Map ID
+   - Map styling must be configured in Cloud Console (cannot be set in code when using Map ID)
+
+3. **API Key Configuration**:
+   - API key must have proper restrictions (HTTP referrer for frontend)
+   - Required environment variable: `GOOGLE_MAPS_API_KEY` (server) and `VITE_GOOGLE_MAPS_API_KEY` (client)
+
+### Advanced Markers Benefits
+- **66% faster** rendering than legacy markers
+- **Native HTML/CSS**: Full control over marker design and animations
+- **Better performance**: Optimized for large datasets
+- **Modern API**: Uses async importLibrary() for better loading
+- **Future-proof**: Recommended by Google over legacy Marker class
+
+### Marker Implementation Details
+- **Default marker**: 44px × 44px circle, pink (#E91E63), white 3px border
+- **Selected marker**: 52px × 52px circle, dark pink (#C2185B), white 4px border
+- **Hover animation**: CSS transform scale(1.1) with 0.2s transition
+- **Bounce animation**: 600ms keyframe animation on selection
+- **Click handlers**: Integrated with list view for bidirectional synchronization
