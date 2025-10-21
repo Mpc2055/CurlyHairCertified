@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
 import type { MentionStats } from "server/storage";
-import { Navigation } from "@/components/navigation";
+import { PageLayout } from "@/layouts/PageLayout";
+import { PageHeader, LoadingState, EmptyState } from "@/components/shared";
 
 export default function AnalyticsMentions() {
   const { data: mentions, isLoading } = useQuery<MentionStats[]>({
@@ -20,9 +20,7 @@ export default function AnalyticsMentions() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
+    <PageLayout>
       {/* Page Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">
@@ -38,26 +36,13 @@ export default function AnalyticsMentions() {
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-6 bg-muted rounded w-1/2 mb-2" />
-                  <div className="h-4 bg-muted rounded w-1/4" />
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
+          <LoadingState message="Loading analytics..." />
         ) : !mentions || mentions.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">No mentions yet</h3>
-              <p className="text-muted-foreground">
-                Stylists mentioned in forum topics will appear here.
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={TrendingUp}
+            title="No mentions yet"
+            description="Stylists mentioned in forum topics will appear here."
+          />
         ) : (
           <div className="space-y-6">
             {/* Summary Card */}
@@ -118,6 +103,6 @@ export default function AnalyticsMentions() {
           </div>
         )}
       </div>
-    </div>
+    </PageLayout>
   );
 }

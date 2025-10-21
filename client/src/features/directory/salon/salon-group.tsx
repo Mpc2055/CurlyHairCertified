@@ -1,5 +1,5 @@
 import { Salon } from "@shared/schema";
-import { StylistCard } from "@/components/stylist/stylist-card";
+import { StylistCard } from "@/features/directory/stylist/stylist-card";
 import { MapPin, Phone, Globe } from "lucide-react";
 
 interface SalonGroupProps {

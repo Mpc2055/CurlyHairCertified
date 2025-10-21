@@ -1,13 +1,11 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { MapPin, Award, Instagram, MessageSquare } from "lucide-react";
-import { Navigation } from "@/components/navigation";
+import { PageLayout } from "@/layouts/PageLayout";
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
+    <PageLayout>
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Gradient Background */}
@@ -93,6 +91,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-    </div>
+    </PageLayout>
   );
 }

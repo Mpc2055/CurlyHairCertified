@@ -1,13 +1,14 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { DirectoryData, FilterOptions, Salon } from "@shared/schema";
-import { GoogleMap } from "@/components/map/google-map";
-import { FilterPanel } from "@/components/filter/filter-panel";
-import { SearchBar } from "@/components/search/search-bar";
-import { SalonGroup } from "@/components/salon/salon-group";
+import { FilterOptions } from "@shared/schema";
+import { GoogleMap } from "@/features/directory/map/google-map";
+import { FilterPanel } from "@/features/directory/filter/filter-panel";
+import { SearchBar } from "@/features/directory/search/search-bar";
+import { SalonGroup } from "@/features/directory/salon/salon-group";
 import { Button } from "@/components/ui/button";
-import { Loader2, Map, List } from "lucide-react";
-import { Navigation } from "@/components/navigation";
+import { Map, List } from "lucide-react";
+import { PageLayout } from "@/layouts/PageLayout";
+import { LoadingState, ErrorState } from "@/components/shared";
+import { useDirectory } from "@/hooks/api";
 
 export default function Rochester() {
   const [selectedSalonId, setSelectedSalonId] = useState<string>();
@@ -20,9 +21,7 @@ export default function Rochester() {
   });
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
 
-  const { data, isLoading, error } = useQuery<DirectoryData>({
-    queryKey: ['/api/directory'],
-  });
+  const { data, isLoading, error } = useDirectory();
 
   // Filter salons based on current filters
   const filteredSalons = useMemo(() => {
@@ -90,24 +89,27 @@ export default function Rochester() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <PageLayout fullHeight>
+        <LoadingState message="Loading directory..." />
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-6">
-        <p className="text-destructive text-lg">Failed to load directory data</p>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
-      </div>
+      <PageLayout fullHeight>
+        <ErrorState
+          title="Failed to load directory"
+          message="We couldn't load the stylist directory. Please try again."
+          onRetry={() => window.location.reload()}
+          inCard={false}
+        />
+      </PageLayout>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      <Navigation />
+    <PageLayout fullHeight>
       
       {/* Search Bar */}
       <div className="border-b bg-background px-6 py-4 flex-shrink-0">
@@ -202,6 +204,6 @@ export default function Rochester() {
           </div>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

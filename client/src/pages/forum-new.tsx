@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -12,8 +11,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Navigation } from "@/components/navigation";
+import { apiRequest } from "@/lib/api";
+import { queryClient } from "@/lib/query";
+import { PageLayout } from "@/layouts/PageLayout";
 
 const formSchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters").max(200, "Title must be less than 200 characters"),
@@ -80,9 +80,7 @@ export default function ForumNew() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
+    <PageLayout>
       {/* Page Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-6">
@@ -243,6 +241,6 @@ export default function ForumNew() {
           </Form>
         </Card>
       </div>
-    </div>
+    </PageLayout>
   );
 }
