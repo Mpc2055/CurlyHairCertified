@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { FilterOptions } from "@shared/schema";
 import { FilterPanel } from "@/features/directory/filter/filter-panel";
-import { SearchBar } from "@/features/directory/search/search-bar";
 import { StylistGrid, flattenSalonsToStylists, sortStylists, SortOption, StylistWithSalon } from "@/features/directory/StylistGrid";
 import { SortControls } from "@/features/directory/SortControls";
 import { MapPanel } from "@/features/directory/MapPanel";
@@ -14,7 +13,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 
 export default function Rochester() {
   const [selectedSalonId, setSelectedSalonId] = useState<string>();
-  const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -97,11 +95,6 @@ export default function Rochester() {
     return count;
   }, [filters]);
 
-  const handleSearch = () => {
-    // TODO: Implement geocoding and proximity search in backend
-    console.log("Search:", searchQuery);
-  };
-
   const handleMarkerClick = (salonId: string) => {
     setSelectedSalonId(salonId);
 
@@ -146,17 +139,6 @@ export default function Rochester() {
 
   return (
     <PageLayout>
-      {/* Search Bar */}
-      <div className="border-b bg-background px-6 py-4">
-        <div className="max-w-7xl mx-auto">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onSearch={handleSearch}
-          />
-        </div>
-      </div>
-
       {/* Main Content: Sidebar + Grid Layout */}
       <div className="flex-1 flex overflow-hidden">
         {/* Desktop Sidebar - Filters */}

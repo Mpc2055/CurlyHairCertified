@@ -39,10 +39,14 @@ export default function ForumTopic() {
 
   const { data: topic, isLoading } = useTopic(topicId);
 
+  // Read prefill query parameter from URL
+  const searchParams = new URLSearchParams(window.location.search);
+  const prefillContent = searchParams.get('prefill') || '';
+
   const form = useForm<ReplyFormValues>({
     resolver: zodResolver(replyFormSchema),
     defaultValues: {
-      content: "",
+      content: prefillContent,
       authorName: "",
       authorEmail: "",
     },

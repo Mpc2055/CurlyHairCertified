@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Instagram, MapPin, CheckCircle2, Globe, Phone, Mail } from "lucide-react";
+import { Instagram, MapPin, CheckCircle2, Globe, Phone, Mail, Pencil } from "lucide-react";
 
 interface StylistCardProps {
   stylist: Stylist & {
@@ -162,6 +162,26 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                   </a>
                 </Button>
               )}
+            </div>
+
+            {/* Suggest Correction Link */}
+            <div className="mt-2 pt-2 border-t border-border">
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="gap-2 w-full text-muted-foreground hover:text-foreground"
+                data-testid={`link-suggest-correction-${stylist.id}`}
+              >
+                <a
+                  href={`/forum/1?prefill=${encodeURIComponent(`Re: ${stylist.name}\n\nIssue: `)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Pencil className="w-3 h-3" />
+                  Suggest Correction
+                </a>
+              </Button>
             </div>
           </div>
         </div>
