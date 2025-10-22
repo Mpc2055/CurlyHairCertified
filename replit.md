@@ -101,12 +101,29 @@ Frontend filters/displays on map + list
 
 ## Environment Variables
 
+### Database Configuration
+The application supports separate development and production databases:
+
+- **Development Environment** (`NODE_ENV=development`):
+  - Uses `DATABASE_URL` - Replit's built-in PostgreSQL database
+  - Automatically configured by Replit
+  - Used for local development and testing
+
+- **Production Environment** (`NODE_ENV=production`):
+  - Uses `PRODUCTION_DATABASE_URL` - External Neon PostgreSQL database
+  - Configured via Replit Secrets
+  - Used when deployed to production
+
+The system automatically selects the appropriate database based on the `NODE_ENV` environment variable.
+
 ### Required Secrets (via Replit Secrets)
-- `DATABASE_URL`: PostgreSQL connection string (auto-configured by Replit)
+- `DATABASE_URL`: PostgreSQL connection string for development (auto-configured by Replit)
+- `PRODUCTION_DATABASE_URL`: PostgreSQL connection string for production (Neon database)
 - `GOOGLE_MAPS_API_KEY`: Google Maps API key (Maps JavaScript API + Geocoding API enabled)
 - `SESSION_SECRET`: Express session secret key
 
 ### Optional Configuration
+- `NODE_ENV`: Environment mode (`development` or `production`, default: `development`)
 - `CACHE_TTL_SECONDS`: Directory cache time-to-live in seconds (default: 3600 = 1 hour)
 
 ### Frontend Environment
@@ -149,6 +166,14 @@ Frontend filters/displays on map + list
 - Clear filters → Reset to all stylists
 
 ## Recent Changes
+- October 22, 2025: Production Database Setup
+  - **Dual Database Support**: Configured separate development and production databases
+  - **Development Database**: Uses Replit's built-in PostgreSQL (DATABASE_URL)
+  - **Production Database**: Uses external Neon PostgreSQL (PRODUCTION_DATABASE_URL)
+  - **Environment-Based Routing**: Automatically selects database based on NODE_ENV
+  - **Configuration Logging**: Server logs which database is being used on startup
+  - **Security**: Production credentials stored securely in Replit Secrets
+
 - October 21, 2025: Database Migration - Airtable to PostgreSQL
   - **Database Migration**: Migrated from Airtable API to PostgreSQL for faster performance and data ownership
   - **Drizzle Schema**: Created normalized 4-table schema (salons, stylists, certifications, stylist_certifications)

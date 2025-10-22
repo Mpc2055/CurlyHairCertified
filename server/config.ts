@@ -15,6 +15,19 @@ function optional(name: string, defaultValue: string): string {
   return process.env[name] || defaultValue;
 }
 
+/**
+ * Get the appropriate database URL based on environment
+ */
+function getDatabaseUrl(): string {
+  const env = optional('NODE_ENV', 'development');
+  
+  if (env === 'production') {
+    return required('PRODUCTION_DATABASE_URL');
+  }
+  
+  return required('DATABASE_URL');
+}
+
 export const config = {
   /**
    * Server configuration
@@ -28,9 +41,10 @@ export const config = {
 
   /**
    * Database configuration
+   * Uses DATABASE_URL for development, PRODUCTION_DATABASE_URL for production
    */
   database: {
-    url: required('DATABASE_URL'),
+    url: getDatabaseUrl(),
   },
 
   /**
@@ -87,4 +101,5 @@ export function validateConfig(): void {
   console.log('[config] Configuration loaded successfully');
   console.log(`[config] Environment: ${config.server.env}`);
   console.log(`[config] Port: ${config.server.port}`);
+  console.log(`[config] Database: ${config.server.isProduction ? 'Production (Neon)' : 'Development (Replit)'}`);
 }
