@@ -66,6 +66,28 @@ export const stylistCertifications = pgTable("stylist_certifications", {
   certificationIdx: index("stylist_cert_certification_idx").on(table.certificationId),
 }));
 
+// ========== Blog Tables ==========
+
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  content: text("content").notNull(),
+  excerpt: text("excerpt").notNull(),
+  authorName: text("author_name").notNull(),
+  authorBio: text("author_bio"),
+  publishedAt: timestamp("published_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  featured: boolean("featured").notNull().default(false),
+  tags: text("tags").array().notNull().default([]),
+  readTime: integer("read_time").notNull().default(5),
+}, (table) => ({
+  slugIdx: index("blog_posts_slug_idx").on(table.slug),
+  publishedAtIdx: index("blog_posts_published_at_idx").on(table.publishedAt),
+  featuredIdx: index("blog_posts_featured_idx").on(table.featured),
+}));
+
 // ========== Forum Tables ==========
 
 export const topics = pgTable("topics", {
@@ -154,18 +176,24 @@ export const insertCertificationSchema = createInsertSchema(certifications);
 export const insertStylistSchema = createInsertSchema(stylists);
 export const insertStylistCertificationSchema = createInsertSchema(stylistCertifications);
 
-export const insertTopicSchema = createInsertSchema(topics).omit({ 
-  id: true, 
-  createdAt: true, 
+export const insertTopicSchema = createInsertSchema(topics).omit({
+  id: true,
+  createdAt: true,
   updatedAt: true,
   upvotesCount: true,
   repliesCount: true,
-  flagCount: true 
+  flagCount: true
 });
-export const insertReplySchema = createInsertSchema(replies).omit({ 
-  id: true, 
+export const insertReplySchema = createInsertSchema(replies).omit({
+  id: true,
   createdAt: true,
-  flagCount: true 
+  flagCount: true
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  publishedAt: true,
+  updatedAt: true
 });
 
 // ========== TypeScript Types ==========
@@ -187,6 +215,9 @@ export type SelectTopic = typeof topics.$inferSelect;
 
 export type InsertReply = z.infer<typeof insertReplySchema>;
 export type SelectReply = typeof replies.$inferSelect;
+
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type SelectBlogPost = typeof blogPosts.$inferSelect;
 
 // ========== API Response Schemas (Zod) ==========
 

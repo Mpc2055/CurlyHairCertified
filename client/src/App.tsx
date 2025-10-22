@@ -2,6 +2,8 @@ import { Switch, Route } from "wouter";
 import { RootLayout } from "@/layouts/RootLayout";
 import Landing from "@/pages/landing";
 import Rochester from "@/pages/rochester";
+import Blog from "@/pages/blog";
+import BlogPost from "@/pages/blog-post";
 import Forum from "@/pages/forum";
 import ForumNew from "@/pages/forum-new";
 import ForumTopic from "@/pages/forum-topic";
@@ -13,6 +15,8 @@ function Router() {
     <Switch>
       <Route path="/" component={Landing} />
       <Route path="/roc" component={Rochester} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/forum" component={Forum} />
       <Route path="/forum/new" component={ForumNew} />
       <Route path="/forum/:id" component={ForumTopic} />

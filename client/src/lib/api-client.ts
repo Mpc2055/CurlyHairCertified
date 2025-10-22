@@ -3,7 +3,7 @@
  * Provides type-safe methods for all API endpoints with consistent error handling
  */
 
-import { DirectoryData, SelectTopic, InsertTopic, InsertReply, SelectReply } from "@shared/schema";
+import { DirectoryData, SelectTopic, InsertTopic, InsertReply, SelectReply, SelectBlogPost } from "@shared/schema";
 import type { TopicWithReplies } from "server/storage";
 
 /**
@@ -42,6 +42,47 @@ export interface DirectoryAPI {
 
 export const directoryAPI: DirectoryAPI = {
   getDirectory: () => request<DirectoryData>("GET", "/api/directory"),
+};
+
+// ========== Blog API ==========
+
+export interface GetBlogPostsParams {
+  tag?: string;
+  limit?: number;
+}
+
+export interface BlogAPI {
+  /**
+   * Get all blog posts with optional filtering
+   */
+  getPosts(params?: GetBlogPostsParams): Promise<SelectBlogPost[]>;
+
+  /**
+   * Get a single blog post by slug
+   */
+  getPost(slug: string): Promise<SelectBlogPost>;
+
+  /**
+   * Get the featured blog post
+   */
+  getFeaturedPost(): Promise<SelectBlogPost | null>;
+}
+
+export const blogAPI: BlogAPI = {
+  getPosts: (params = {}) => {
+    const urlParams = new URLSearchParams();
+    if (params.tag) urlParams.append('tag', params.tag);
+    if (params.limit) urlParams.append('limit', params.limit.toString());
+
+    const url = `/api/blog/posts${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
+    return request<SelectBlogPost[]>("GET", url);
+  },
+
+  getPost: (slug) =>
+    request<SelectBlogPost>("GET", `/api/blog/posts/${slug}`),
+
+  getFeaturedPost: () =>
+    request<SelectBlogPost | null>("GET", "/api/blog/featured"),
 };
 
 // ========== Forum API ==========
@@ -134,6 +175,7 @@ export const forumAPI: ForumAPI = {
  */
 export const api = {
   directory: directoryAPI,
+  blog: blogAPI,
   forum: forumAPI,
 } as const;
 

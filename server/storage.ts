@@ -8,10 +8,12 @@ import {
   stylistCertifications,
   topics,
   replies,
+  blogPosts,
   type InsertTopic,
   type InsertReply,
   type SelectTopic,
   type SelectReply,
+  type SelectBlogPost,
 } from '../shared/schema';
 import type { DirectoryData, Salon, Stylist, Certification } from '../shared/schema';
 import { geocodeAddress } from './geocoding';
@@ -61,6 +63,14 @@ export interface MentionStats {
 
 export interface IStorage {
   getDirectory(): Promise<DirectoryData>;
+
+  // Blog operations
+  getBlogPosts(options: {
+    tag?: string;
+    limit?: number;
+  }): Promise<SelectBlogPost[]>;
+  getBlogPostBySlug(slug: string): Promise<SelectBlogPost | null>;
+  getFeaturedBlogPost(): Promise<SelectBlogPost | null>;
 
   // Forum operations
   createTopic(topic: InsertTopic): Promise<SelectTopic>;
@@ -214,6 +224,64 @@ export class PostgresStorage implements IStorage {
       throw error;
     }
   }
+
+  // ========== Blog Methods ==========
+
+  async getBlogPosts(options: { tag?: string; limit?: number }): Promise<SelectBlogPost[]> {
+    try {
+      const { tag, limit = 50 } = options;
+
+      let query = db
+        .select()
+        .from(blogPosts)
+        .orderBy(desc(blogPosts.publishedAt))
+        .limit(limit);
+
+      // Filter by tag if provided
+      if (tag) {
+        query = query.where(arrayContains(blogPosts.tags, [tag])) as any;
+      }
+
+      const posts = await query;
+      return posts;
+    } catch (error) {
+      console.error('[storage] Error fetching blog posts:', error);
+      throw error;
+    }
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<SelectBlogPost | null> {
+    try {
+      const [post] = await db
+        .select()
+        .from(blogPosts)
+        .where(eq(blogPosts.slug, slug))
+        .limit(1);
+
+      return post || null;
+    } catch (error) {
+      console.error('[storage] Error fetching blog post by slug:', error);
+      throw error;
+    }
+  }
+
+  async getFeaturedBlogPost(): Promise<SelectBlogPost | null> {
+    try {
+      const [post] = await db
+        .select()
+        .from(blogPosts)
+        .where(eq(blogPosts.featured, true))
+        .orderBy(desc(blogPosts.publishedAt))
+        .limit(1);
+
+      return post || null;
+    } catch (error) {
+      console.error('[storage] Error fetching featured blog post:', error);
+      throw error;
+    }
+  }
+
+  // ========== Forum Methods ==========
 
   async createTopic(topic: InsertTopic): Promise<SelectTopic> {
     const [newTopic] = await db.insert(topics).values(topic).returning();

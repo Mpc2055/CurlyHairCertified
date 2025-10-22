@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { DirectoryData, insertTopicSchema, insertReplySchema } from "@shared/schema";
+import { DirectoryData, insertTopicSchema, insertReplySchema, SelectBlogPost } from "@shared/schema";
 import { getCachedDirectory, setCachedDirectory, clearCache, getCacheStats } from "./cache";
 import { storage } from "./storage";
 import { checkSpamProtection } from "./spam-protection";
@@ -68,6 +68,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error getting cache stats:", error);
       res.status(500).json({ 
         message: "Failed to get cache stats",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // ========== Blog Routes ==========
+
+  // Get all blog posts
+  app.get("/api/blog/posts", async (req, res) => {
+    try {
+      const { tag, limit } = req.query;
+
+      const posts = await storage.getBlogPosts({
+        tag: tag as string | undefined,
+        limit: limit ? parseInt(limit as string) : 50,
+      });
+
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching blog posts:", error);
+      res.status(500).json({
+        message: "Failed to fetch blog posts",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get single blog post by slug
+  app.get("/api/blog/posts/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+
+      const post = await storage.getBlogPostBySlug(slug);
+
+      if (!post) {
+        return res.status(404).json({
+          message: "Blog post not found"
+        });
+      }
+
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching blog post:", error);
+      res.status(500).json({
+        message: "Failed to fetch blog post",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get featured blog post
+  app.get("/api/blog/featured", async (_req, res) => {
+    try {
+      const post = await storage.getFeaturedBlogPost();
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching featured blog post:", error);
+      res.status(500).json({
+        message: "Failed to fetch featured blog post",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
