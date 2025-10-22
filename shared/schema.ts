@@ -49,6 +49,10 @@ export const stylists = pgTable("stylists", {
   profilePhoto: text("profile_photo"),
   canBookOnline: boolean("can_book_online").default(false).notNull(),
   curlyCutPrice: numeric("curly_cut_price"),
+  // AI-generated summary fields
+  aiSummary: text("ai_summary"),
+  aiSummaryGeneratedAt: timestamp("ai_summary_generated_at"),
+  aiSummarySources: text("ai_summary_sources"), // JSON string of grounding sources
 }, (table) => ({
   salonIdx: index("salon_idx").on(table.salonId),
 }));
@@ -210,6 +214,10 @@ export const stylistSchema = z.object({
   canBookOnline: z.boolean().default(false),
   price: z.number().optional(),
   certifications: z.array(certificationSchema),
+  // AI-generated summary
+  aiSummary: z.string().optional(),
+  aiSummaryGeneratedAt: z.date().optional(),
+  aiSummarySources: z.string().optional(), // JSON string
 });
 
 export type Stylist = z.infer<typeof stylistSchema>;

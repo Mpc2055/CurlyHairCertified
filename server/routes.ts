@@ -284,6 +284,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== AI Summary Routes ==========
+
+  // Generate AI summaries for stylists (batch or specific IDs)
+  app.post("/api/admin/generate-ai-summaries", async (req, res) => {
+    try {
+      const { stylistIds } = req.body;
+
+      console.log('[api] POST /api/admin/generate-ai-summaries - Starting batch generation');
+
+      const result = await storage.generateAISummariesBatch(stylistIds);
+
+      console.log(`[api] POST /api/admin/generate-ai-summaries - Complete: ${result.generated} generated, ${result.skipped} skipped, ${result.errors} errors`);
+
+      res.json({
+        message: "AI summary generation complete",
+        ...result,
+      });
+    } catch (error) {
+      console.error("Error generating AI summaries:", error);
+      res.status(500).json({
+        message: "Failed to generate AI summaries",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Refresh AI summary for a specific stylist
+  app.post("/api/stylists/:id/refresh-summary", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      console.log(`[api] POST /api/stylists/${id}/refresh-summary - Checking eligibility`);
+
+      // Check if should generate (30-day limit)
+      const shouldGenerate = await storage.shouldGenerateAISummary(id);
+
+      if (!shouldGenerate) {
+        return res.status(429).json({
+          message: "AI summary was recently generated. Please wait 30 days between refreshes.",
+          canRefresh: false,
+        });
+      }
+
+      console.log(`[api] POST /api/stylists/${id}/refresh-summary - Generating new summary`);
+
+      const result = await storage.generateAISummaryForStylist(id);
+
+      if (result.success) {
+        // Clear cache so new summary is reflected
+        clearCache();
+
+        res.json({
+          message: "AI summary refreshed successfully",
+          summary: result.summary,
+          canRefresh: false,
+        });
+      } else {
+        res.status(500).json({
+          message: "Failed to refresh AI summary",
+          error: result.error,
+        });
+      }
+    } catch (error) {
+      console.error("Error refreshing AI summary:", error);
+      res.status(500).json({
+        message: "Failed to refresh AI summary",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Check if a stylist can have their AI summary refreshed
+  app.get("/api/stylists/:id/can-refresh-summary", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const canRefresh = await storage.shouldGenerateAISummary(id);
+
+      res.json({
+        canRefresh,
+        message: canRefresh
+          ? "AI summary can be refreshed"
+          : "AI summary was recently generated. Please wait 30 days between refreshes.",
+      });
+    } catch (error) {
+      console.error("Error checking refresh eligibility:", error);
+      res.status(500).json({
+        message: "Failed to check refresh eligibility",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
