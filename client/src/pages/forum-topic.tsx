@@ -128,7 +128,7 @@ export default function ForumTopic() {
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <CardTitle className="text-3xl mb-4">{topic.title}</CardTitle>
+                    <CardTitle className="font-heading text-3xl mb-4">{topic.title}</CardTitle>
                     {topic.tags && topic.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
                         {topic.tags.map((tag) => (
@@ -240,7 +240,7 @@ export default function ForumTopic() {
             {/* Replies */}
             {topic.replies && topic.replies.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold mb-4">{topic.repliesCount} Replies</h2>
+                <h2 className="font-heading text-2xl font-bold mb-4">{topic.repliesCount} Replies</h2>
                 {topic.replies.map((reply) => (
                   <Reply key={reply.id} reply={reply} topicId={topic.id} />
                 ))}

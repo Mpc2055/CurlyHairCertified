@@ -30,11 +30,11 @@ export function ErrorState({
     <div className="flex flex-col items-center justify-center min-h-[300px] p-6 text-center gap-4">
       <AlertCircle className="w-12 h-12 text-destructive" />
       <div>
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-muted-foreground">{message}</p>
+        <h3 className="font-heading text-xl font-semibold mb-2">{title}</h3>
+        <p className="text-muted-foreground text-base">{message}</p>
       </div>
       {onRetry && (
-        <Button onClick={onRetry} variant="outline">
+        <Button onClick={onRetry} variant="outline" className="mt-2">
           {retryText}
         </Button>
       )}

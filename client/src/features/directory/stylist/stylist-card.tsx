@@ -42,7 +42,8 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
     <Card
       className={`
         overflow-hidden hover-elevate transition-all duration-200 h-full flex flex-col
-        ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''}
+        hover:shadow-lg hover:scale-[1.02]
+        ${isSelected ? 'ring-2 ring-primary ring-offset-2 shadow-xl' : ''}
       `}
       data-testid={`card-stylist-${stylist.id}`}
       data-salon-id={stylist.salonId}
@@ -52,7 +53,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
         <div className="flex-1 flex flex-col text-center">
           {/* Stylist Name - Hero Element */}
           <div className="mb-2">
-            <h3 className="font-bold text-2xl tracking-tight text-foreground mb-1" data-testid={`text-stylist-name-${stylist.id}`}>
+            <h3 className="font-heading font-bold text-2xl tracking-tight text-foreground mb-1" data-testid={`text-stylist-name-${stylist.id}`}>
               {stylist.name}
             </h3>
           </div>
@@ -93,7 +94,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
           {/* Price - Prominent display */}
           {stylist.price && (
             <div className="mb-3">
-              <span className="text-2xl font-bold text-primary" data-testid={`text-price-${stylist.id}`}>
+              <span className="font-heading text-3xl font-bold text-primary" data-testid={`text-price-${stylist.id}`}>
                 ${stylist.price}
               </span>
             </div>
@@ -105,8 +106,8 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
               {stylist.certifications.map((cert) => (
                 <Badge
                   key={cert.id}
-                  variant="secondary"
-                  className="text-xs"
+                  variant="outline"
+                  className="text-xs border-primary/30 text-primary bg-primary/5 font-medium px-3 py-1"
                   data-testid={`badge-certification-${cert.id}`}
                 >
                   {cert.name}

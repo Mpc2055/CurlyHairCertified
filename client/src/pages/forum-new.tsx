@@ -89,7 +89,7 @@ export default function ForumNew() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold">Create New Topic</h1>
+              <h1 className="font-heading text-2xl font-bold">Create New Topic</h1>
               <p className="text-sm text-muted-foreground">Start a new discussion</p>
             </div>
           </div>

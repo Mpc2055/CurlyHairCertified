@@ -37,13 +37,13 @@ export function EmptyState({
     <div className="flex flex-col items-center justify-center min-h-[300px] p-6 text-center gap-4">
       {Icon && <Icon className="w-12 h-12 text-muted-foreground" />}
       <div>
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
+        <h3 className="font-heading text-xl font-semibold mb-2">{title}</h3>
         {description && (
-          <p className="text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground text-base">{description}</p>
         )}
       </div>
       {action && (
-        <Button onClick={action.onClick}>
+        <Button onClick={action.onClick} className="mt-2">
           {action.label}
         </Button>
       )}
