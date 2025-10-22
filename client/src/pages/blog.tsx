@@ -8,9 +8,9 @@ import { usePosts } from "@/hooks/api";
 import { BlogCard } from "@/features/blog";
 
 export default function Blog() {
-  const [tagFilter, setTagFilter] = useState<string>("");
+  const [tagFilter, setTagFilter] = useState<string>("all");
 
-  const { data: posts, isLoading } = usePosts({ tag: tagFilter || undefined });
+  const { data: posts, isLoading } = usePosts({ tag: tagFilter === "all" ? undefined : tagFilter });
 
   // Extract unique tags from all posts
   const allTags = Array.from(new Set(posts?.flatMap(post => post.tags || []) || [])).sort();
@@ -32,7 +32,7 @@ export default function Blog() {
                 <SelectValue placeholder="All topics" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All topics</SelectItem>
+                <SelectItem value="all">All topics</SelectItem>
                 {allTags.map((tag) => (
                   <SelectItem key={tag} value={tag}>
                     {tag}
@@ -41,11 +41,11 @@ export default function Blog() {
               </SelectContent>
             </Select>
 
-            {tagFilter && (
+            {tagFilter !== "all" && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setTagFilter("")}
+                onClick={() => setTagFilter("all")}
                 data-testid="button-clear-filter"
               >
                 Clear filter
@@ -60,11 +60,11 @@ export default function Blog() {
         ) : !posts || posts.length === 0 ? (
           <EmptyState
             icon={BookOpen}
-            title={tagFilter ? "No posts with this tag" : "No blog posts yet"}
-            description={tagFilter ? "Try selecting a different tag" : "Check back soon for updates"}
-            action={tagFilter ? {
+            title={tagFilter !== "all" ? "No posts with this tag" : "No blog posts yet"}
+            description={tagFilter !== "all" ? "Try selecting a different tag" : "Check back soon for updates"}
+            action={tagFilter !== "all" ? {
               label: "Clear filter",
-              onClick: () => setTagFilter("")
+              onClick: () => setTagFilter("all")
             } : undefined}
           />
         ) : (
