@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq, desc, sql as drizzleSql, and, arrayContains, ilike } from 'drizzle-orm';
+import { eq, desc, sql as drizzleSql, and, arrayContains, ilike, inArray } from 'drizzle-orm';
 import {
   salons,
   stylists,
@@ -559,7 +559,7 @@ export class PostgresStorage implements IStorage {
 
       const certIds = stylistCerts.map(sc => sc.certificationId);
       const certsData = certIds.length > 0
-        ? await db.select().from(certifications).where(drizzleSql`${certifications.id} = ANY(${certIds})`)
+        ? await db.select().from(certifications).where(inArray(certifications.id, certIds))
         : [];
 
       // Prepare data for Gemini
