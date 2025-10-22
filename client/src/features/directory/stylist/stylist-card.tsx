@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Instagram, Globe, Phone, Mail, Pencil, Star } from "lucide-react";
 import { SalonRatingDialog } from "./salon-rating-dialog";
+import { ensureProtocol, getInstagramUrl as formatInstagramUrl } from "@/lib/url-utils";
 
 interface StylistCardProps {
   stylist: Stylist & {
@@ -25,11 +26,6 @@ interface StylistCardProps {
 
 export function StylistCard({ stylist, onViewOnMap, isSelected = false }: StylistCardProps) {
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
-
-  const getInstagramUrl = (handle: string) => {
-    const cleanHandle = handle.replace('@', '');
-    return `https://instagram.com/${cleanHandle}`;
-  };
 
   // Check if we should display salon rating
   const hasRating =
@@ -129,7 +125,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                       className="h-11 w-11"
                       data-testid={`link-instagram-${stylist.id}`}
                     >
-                      <a href={getInstagramUrl(stylist.instagram)} target="_blank" rel="noopener noreferrer">
+                      <a href={formatInstagramUrl(stylist.instagram)} target="_blank" rel="noopener noreferrer">
                         <Instagram className="w-4 h-4" />
                       </a>
                     </Button>
@@ -148,7 +144,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                       className="h-11 w-11"
                       data-testid={`link-website-${stylist.id}`}
                     >
-                      <a href={stylist.website} target="_blank" rel="noopener noreferrer">
+                      <a href={ensureProtocol(stylist.website)} target="_blank" rel="noopener noreferrer">
                         <Globe className="w-4 h-4" />
                       </a>
                     </Button>

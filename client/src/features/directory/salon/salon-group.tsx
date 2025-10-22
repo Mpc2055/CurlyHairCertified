@@ -1,6 +1,7 @@
 import { Salon } from "@shared/schema";
 import { StylistCard } from "@/features/directory/stylist/stylist-card";
 import { MapPin, Phone, Globe } from "lucide-react";
+import { ensureProtocol } from "@/lib/url-utils";
 
 interface SalonGroupProps {
   salon: Salon;
@@ -34,9 +35,9 @@ export function SalonGroup({ salon, onViewOnMap }: SalonGroupProps) {
           {salon.website && (
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4" />
-              <a 
-                href={salon.website.startsWith('http') ? salon.website : `https://${salon.website}`} 
-                target="_blank" 
+              <a
+                href={ensureProtocol(salon.website)}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-foreground transition-colors"
               >
