@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { MapPin, Award, Instagram, MessageSquare } from "lucide-react";
+import { MapPin, Award, Phone, BookOpen, MessageSquare } from "lucide-react";
 import { PageLayout } from "@/layouts/PageLayout";
 
 export default function Landing() {
@@ -20,7 +20,7 @@ export default function Landing() {
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Your trusted resource for finding certified curly hair specialists in Rochester. Browse stylists by certification, view their work, and read community discussions.
+            Your trusted resource for finding certified curly hair specialists in Rochester. Browse stylists by certification, view transparent pricing, and connect with our community.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -55,7 +55,7 @@ export default function Landing() {
               </div>
               <h3 className="font-semibold text-lg">Certified Specialists</h3>
               <p className="text-sm text-muted-foreground">
-                Stylists with professional certifications like DevaCurl and Curly Hair Artistry
+                Professional stylists with certifications like DevaCurl, Rëzo, and Curly Hair Artistry. View transparent pricing upfront.
               </p>
             </div>
             
@@ -63,29 +63,29 @@ export default function Landing() {
               <div className="w-16 h-16 rounded-lg bg-map-accent/10 flex items-center justify-center">
                 <MapPin className="w-8 h-8 text-map-accent" />
               </div>
-              <h3 className="font-semibold text-lg">Location Search</h3>
+              <h3 className="font-semibold text-lg">Interactive Map</h3>
               <p className="text-sm text-muted-foreground">
-                Find stylists near you with interactive map
-              </p>
-            </div>
-            
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-lg bg-chart-3/10 flex items-center justify-center">
-                <Instagram className="w-8 h-8 text-chart-3" />
-              </div>
-              <h3 className="font-semibold text-lg">Connect Directly</h3>
-              <p className="text-sm text-muted-foreground">
-                View their work and connect via social media, phone, email, or website
+                Find stylists near you with our searchable map. Filter by certification, location, and price.
               </p>
             </div>
             
             <div className="flex flex-col items-center gap-3">
               <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="w-8 h-8 text-primary" />
+                <BookOpen className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg">Community Forum</h3>
+              <h3 className="font-semibold text-lg">Community Resources</h3>
               <p className="text-sm text-muted-foreground">
-                Share experiences and ask questions
+                Read educational content about curly hair care, join discussions, and learn from real experiences.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-lg bg-chart-3/10 flex items-center justify-center">
+                <Phone className="w-8 h-8 text-chart-3" />
+              </div>
+              <h3 className="font-semibold text-lg">Connect Directly</h3>
+              <p className="text-sm text-muted-foreground">
+                View their Instagram, visit their websites, and book appointments via phone or email.
               </p>
             </div>
           </div>
