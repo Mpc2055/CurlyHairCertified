@@ -93,53 +93,48 @@ Search for information about this stylist focusing on Google/Yelp reviews, Insta
       apiKey: GEMINI_API_KEY,
     });
 
+    // Combine system prompt and user prompt into a single prompt
+    const fullPrompt = `${SYSTEM_PROMPT}\n\n---\n\n${userPrompt}`;
+
     const response = await ai.models.generateContent({
       model: MODEL,
-      systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: userPrompt }],
-        },
-      ],
+      contents: fullPrompt, // Simple string format as per official docs
       config: {
         tools: [{ googleSearch: {} }],
-        maxOutputTokens: 500, // ~350 words max to ensure we stay within target
+        maxOutputTokens: 8192, // Very high to accommodate thinking tokens + output
         temperature: 0.7, // Some creativity but still factual
+        // Thinking budget to limit internal reasoning tokens
+        thinkingConfig: {
+          thinkingBudget: 2048, // Limit thinking tokens to leave room for output
+        },
       },
     });
 
-    // Debug: Log the full response to understand structure
-    console.log(`[gemini-ai] Response candidates:`, response.candidates?.length || 0);
-    console.log(`[gemini-ai] Full response:`, JSON.stringify(response, null, 2).substring(0, 2000));
-    
-    // Extract text from the response
-    let summary = '';
-    if (response.candidates && response.candidates.length > 0) {
-      const candidate = response.candidates[0];
-      console.log(`[gemini-ai] Candidate content:`, JSON.stringify(candidate.content, null, 2));
-      if (candidate.content && candidate.content.parts) {
-        summary = candidate.content.parts.map((part: any) => part.text || '').join('');
-      }
-    }
+    // Extract text from response
+    const summary = response.text || (response.candidates?.[0]?.content?.parts?.[0]?.text) || '';
+    const finishReason = response.candidates?.[0]?.finishReason;
 
-    console.log(`[gemini-ai] Extracted summary length: ${summary.length} chars`);
+    console.log(`[gemini-ai] Generated summary: ${summary.length} characters`);
+    if (finishReason === 'MAX_TOKENS') {
+      console.warn(`[gemini-ai] WARNING: Response was truncated due to MAX_TOKENS. Consider increasing maxOutputTokens.`);
+    }
+    if (summary.length > 0) {
+      console.log(`[gemini-ai] Preview: ${summary.substring(0, 150)}...`);
+    }
 
     // Extract grounding metadata
     const groundingMetadata = (response.candidates?.[0] as any)?.groundingMetadata || {};
+    const webSearchQueries = groundingMetadata.webSearchQueries || [];
+    const groundingSupports = groundingMetadata.groundingSupports || [];
+
     const sources = JSON.stringify({
-      searchQueries: groundingMetadata.webSearchQueries || [],
-      groundingChunks: groundingMetadata.groundingChunks?.map((chunk: any) => ({
-        uri: chunk.web?.uri,
-        title: chunk.web?.title,
-      })) || [],
+      searchQueries: webSearchQueries.filter((q: string) => q && q.trim().length > 0), // Filter empty queries
+      groundingSupportsCount: groundingSupports.length,
       generatedAt: new Date().toISOString(),
     });
 
     console.log(`[gemini-ai] Summary generated successfully for ${stylistData.name}`);
-    console.log(`[gemini-ai] Grounding sources: ${groundingMetadata.groundingChunks?.length || 0} sources found`);
+    console.log(`[gemini-ai] Grounding: ${webSearchQueries.filter((q: string) => q && q.trim()).length} search queries, ${groundingSupports.length} grounding supports`);
 
     return {
       summary: summary.trim(),

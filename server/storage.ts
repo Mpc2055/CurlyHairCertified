@@ -80,7 +80,7 @@ export interface IStorage {
   // AI Summary operations
   shouldGenerateAISummary(stylistId: string): Promise<boolean>;
   generateAISummaryForStylist(stylistId: string): Promise<{ success: boolean; summary?: string; error?: string }>;
-  generateAISummariesBatch(stylistIds?: string[]): Promise<{ generated: number; skipped: number; errors: number }>;
+  generateAISummariesBatch(stylistIds?: string[], force?: boolean): Promise<{ generated: number; skipped: number; errors: number }>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -617,7 +617,7 @@ export class PostgresStorage implements IStorage {
    * If stylistIds is provided, only generate for those stylists
    * Otherwise, generate for all stylists that need summaries
    */
-  async generateAISummariesBatch(stylistIds?: string[]): Promise<{ generated: number; skipped: number; errors: number }> {
+  async generateAISummariesBatch(stylistIds?: string[], force: boolean = false): Promise<{ generated: number; skipped: number; errors: number }> {
     let targetStylists: string[];
 
     if (stylistIds && stylistIds.length > 0) {
@@ -628,7 +628,7 @@ export class PostgresStorage implements IStorage {
       targetStylists = allStylists.map(s => s.id);
     }
 
-    console.log(`[storage] Starting batch AI summary generation for ${targetStylists.length} stylists`);
+    console.log(`[storage] Starting batch AI summary generation for ${targetStylists.length} stylists${force ? ' (FORCE MODE - bypassing 30-day limit)' : ''}`);
 
     let generated = 0;
     let skipped = 0;
@@ -636,8 +636,8 @@ export class PostgresStorage implements IStorage {
 
     for (const stylistId of targetStylists) {
       try {
-        // Check if should generate
-        const shouldGenerate = await this.shouldGenerateAISummary(stylistId);
+        // Check if should generate (skip check if force=true)
+        const shouldGenerate = force || await this.shouldGenerateAISummary(stylistId);
 
         if (!shouldGenerate) {
           console.log(`[storage] Skipping ${stylistId} - summary is fresh (<${AI_SUMMARY_REFRESH_DAYS} days old)`);

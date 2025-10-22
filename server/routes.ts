@@ -289,11 +289,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate AI summaries for stylists (batch or specific IDs)
   app.post("/api/admin/generate-ai-summaries", async (req, res) => {
     try {
-      const { stylistIds } = req.body;
+      const { stylistIds, force } = req.body;
 
-      console.log('[api] POST /api/admin/generate-ai-summaries - Starting batch generation');
+      console.log('[api] POST /api/admin/generate-ai-summaries - Starting batch generation', force ? '(FORCE MODE)' : '');
 
-      const result = await storage.generateAISummariesBatch(stylistIds);
+      const result = await storage.generateAISummariesBatch(stylistIds, force);
 
       console.log(`[api] POST /api/admin/generate-ai-summaries - Complete: ${result.generated} generated, ${result.skipped} skipped, ${result.errors} errors`);
 
