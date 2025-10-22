@@ -91,28 +91,28 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
             </div>
           )}
 
-          {/* Price - Prominent display */}
-          {stylist.price && (
-            <div className="mb-3">
-              <span className="font-heading text-3xl font-bold text-primary" data-testid={`text-price-${stylist.id}`}>
-                ${stylist.price}
-              </span>
-            </div>
-          )}
-
-          {/* Certifications */}
+          {/* Certifications - Prominent display */}
           {stylist.certifications.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3 justify-center">
               {stylist.certifications.map((cert) => (
                 <Badge
                   key={cert.id}
                   variant="outline"
-                  className="text-xs border-primary/30 text-primary bg-primary/5 font-medium px-3 py-1"
+                  className="text-sm border-primary text-primary bg-primary/8 font-semibold px-4 py-1.5"
                   data-testid={`badge-certification-${cert.id}`}
                 >
                   {cert.name}
                 </Badge>
               ))}
+            </div>
+          )}
+
+          {/* Price - Balanced display */}
+          {stylist.price && (
+            <div className="mb-3">
+              <span className="text-lg font-medium text-foreground" data-testid={`text-price-${stylist.id}`}>
+                ${stylist.price}
+              </span>
             </div>
           )}
 
