@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
+import { config } from '../../config';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const MODEL = 'gemini-2.5-flash';
 
 // System prompt from PROMPT-ONLY.md
@@ -65,7 +65,7 @@ export interface AISummaryResult {
  * Generate AI summary for a stylist using Gemini 2.5 Flash with Google Search grounding
  */
 export async function generateStylistSummary(stylistData: StylistData): Promise<AISummaryResult> {
-  if (!GEMINI_API_KEY) {
+  if (!config.gemini.apiKey) {
     throw new Error('GEMINI_API_KEY environment variable is required');
   }
 
@@ -90,7 +90,7 @@ Search for information about this stylist focusing on Google/Yelp reviews, Insta
 
   try {
     const ai = new GoogleGenAI({
-      apiKey: GEMINI_API_KEY,
+      apiKey: config.gemini.apiKey,
     });
 
     // Combine system prompt and user prompt into a single prompt

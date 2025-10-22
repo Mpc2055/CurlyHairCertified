@@ -7,7 +7,7 @@ import {
 } from '@shared/schema';
 import { BaseStorage } from './base/BaseStorage';
 import type { IAIStorage, AISummaryResult, AISummaryBatchResult } from './base/types';
-import { generateStylistSummary, validateSummary, type StylistData } from '../gemini-ai';
+import { generateStylistSummary, validateSummary, type StylistData } from '../services/ai/gemini';
 
 // Constants
 const AI_SUMMARY_REFRESH_DAYS = 30;

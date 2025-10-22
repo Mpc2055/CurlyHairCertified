@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { checkSpamProtection } from '../spam-protection';
+import { checkSpamProtection } from '../services/forum/spam-protection';
 import { rateLimitError } from './errorHandler';
 
 /**

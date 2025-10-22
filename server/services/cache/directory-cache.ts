@@ -1,11 +1,10 @@
 import NodeCache from 'node-cache';
 import type { DirectoryData } from '@shared/schema';
+import { config } from '../../config';
 
-const TTL_SECONDS = parseInt(process.env.CACHE_TTL_SECONDS || '3600');
-
-const cache = new NodeCache({ 
-  stdTTL: TTL_SECONDS,
-  checkperiod: TTL_SECONDS * 0.2,
+const cache = new NodeCache({
+  stdTTL: config.cache.ttl,
+  checkperiod: config.cache.ttl * 0.2,
   useClones: false
 });
 
@@ -31,7 +30,7 @@ export function getCacheStats() {
     misses: stats.misses,
     ksize: stats.ksize,
     vsize: stats.vsize,
-    ttl: TTL_SECONDS,
+    ttl: config.cache.ttl,
   };
 }
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware';
-import { getCachedDirectory, setCachedDirectory } from '../cache';
+import { getCachedDirectory, setCachedDirectory } from '../services/cache/directory-cache';
 import { storage } from '../storage';
 
 export const directoryRouter = Router();

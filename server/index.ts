@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes, fetchDirectoryData } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setCachedDirectory } from "./cache";
+import { setCachedDirectory } from "./services/cache/directory-cache";
 import { errorHandler } from "./middleware";
 import { config, validateConfig } from "./config";
 

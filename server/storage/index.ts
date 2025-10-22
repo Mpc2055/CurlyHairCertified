@@ -22,37 +22,55 @@ class UnifiedStorage implements IStorage {
   private forum: ForumStorage;
   private ai: AIStorage;
 
+  // Method declarations
+  getBlogPosts: BlogStorage['getBlogPosts'];
+  getBlogPostBySlug: BlogStorage['getBlogPostBySlug'];
+  getFeaturedBlogPost: BlogStorage['getFeaturedBlogPost'];
+  getMentionAnalytics: AnalyticsStorage['getMentionAnalytics'];
+  getDirectory: DirectoryStorage['getDirectory'];
+  createTopic: ForumStorage['createTopic'];
+  getTopics: ForumStorage['getTopics'];
+  getTopicById: ForumStorage['getTopicById'];
+  createReply: ForumStorage['createReply'];
+  flagContent: ForumStorage['flagContent'];
+  upvoteTopic: ForumStorage['upvoteTopic'];
+  shouldGenerateAISummary: AIStorage['shouldGenerateAISummary'];
+  generateAISummaryForStylist: AIStorage['generateAISummaryForStylist'];
+  generateAISummariesBatch: AIStorage['generateAISummariesBatch'];
+
   constructor() {
+    // Initialize storage modules
     this.blog = new BlogStorage();
     this.analytics = new AnalyticsStorage();
     this.directory = new DirectoryStorage();
     this.forum = new ForumStorage();
     this.ai = new AIStorage();
+
+    // Bind methods after initialization
+    // Blog Methods
+    this.getBlogPosts = this.blog.getBlogPosts.bind(this.blog);
+    this.getBlogPostBySlug = this.blog.getBlogPostBySlug.bind(this.blog);
+    this.getFeaturedBlogPost = this.blog.getFeaturedBlogPost.bind(this.blog);
+
+    // Analytics Methods
+    this.getMentionAnalytics = this.analytics.getMentionAnalytics.bind(this.analytics);
+
+    // Directory Methods
+    this.getDirectory = this.directory.getDirectory.bind(this.directory);
+
+    // Forum Methods
+    this.createTopic = this.forum.createTopic.bind(this.forum);
+    this.getTopics = this.forum.getTopics.bind(this.forum);
+    this.getTopicById = this.forum.getTopicById.bind(this.forum);
+    this.createReply = this.forum.createReply.bind(this.forum);
+    this.flagContent = this.forum.flagContent.bind(this.forum);
+    this.upvoteTopic = this.forum.upvoteTopic.bind(this.forum);
+
+    // AI Methods
+    this.shouldGenerateAISummary = this.ai.shouldGenerateAISummary.bind(this.ai);
+    this.generateAISummaryForStylist = this.ai.generateAISummaryForStylist.bind(this.ai);
+    this.generateAISummariesBatch = this.ai.generateAISummariesBatch.bind(this.ai);
   }
-
-  // ========== Blog Methods ==========
-  getBlogPosts = this.blog.getBlogPosts.bind(this.blog);
-  getBlogPostBySlug = this.blog.getBlogPostBySlug.bind(this.blog);
-  getFeaturedBlogPost = this.blog.getFeaturedBlogPost.bind(this.blog);
-
-  // ========== Analytics Methods ==========
-  getMentionAnalytics = this.analytics.getMentionAnalytics.bind(this.analytics);
-
-  // ========== Directory Methods ==========
-  getDirectory = this.directory.getDirectory.bind(this.directory);
-
-  // ========== Forum Methods ==========
-  createTopic = this.forum.createTopic.bind(this.forum);
-  getTopics = this.forum.getTopics.bind(this.forum);
-  getTopicById = this.forum.getTopicById.bind(this.forum);
-  createReply = this.forum.createReply.bind(this.forum);
-  flagContent = this.forum.flagContent.bind(this.forum);
-  upvoteTopic = this.forum.upvoteTopic.bind(this.forum);
-
-  // ========== AI Methods ==========
-  shouldGenerateAISummary = this.ai.shouldGenerateAISummary.bind(this.ai);
-  generateAISummaryForStylist = this.ai.generateAISummaryForStylist.bind(this.ai);
-  generateAISummariesBatch = this.ai.generateAISummariesBatch.bind(this.ai);
 }
 
 /**

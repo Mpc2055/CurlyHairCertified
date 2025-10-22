@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler, validateRequest, spamProtection, notFound, validationError } from '../middleware';
 import { insertTopicSchema, insertReplySchema } from '@shared/schema';
 import { storage } from '../storage';
-import { detectStylistMentions } from '../mention-detection';
+import { detectStylistMentions } from '../services/forum/mention-detection';
 
 export const forumRouter = Router();
 

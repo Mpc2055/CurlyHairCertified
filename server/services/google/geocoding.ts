@@ -1,3 +1,5 @@
+import { config } from '../../config';
+
 interface GeocodeResult {
   lat: number;
   lng: number;
@@ -18,8 +20,8 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
 
   try {
     const encodedAddress = encodeURIComponent(address);
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
-    
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${config.google.mapsApiKey}`;
+
     const response = await fetch(url);
     const data = await response.json();
 
@@ -44,4 +46,3 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
     return { lat: 43.1566, lng: -77.6088 };
   }
 }
-

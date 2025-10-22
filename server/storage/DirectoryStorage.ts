@@ -11,8 +11,8 @@ import {
 } from '@shared/schema';
 import { BaseStorage } from './base/BaseStorage';
 import type { IDirectoryStorage } from './base/types';
-import { geocodeAddress } from '../geocoding';
-import { findPlaceId, getPlaceDetails } from '../google-places';
+import { geocodeAddress } from '../services/google/geocoding';
+import { findPlaceId, getPlaceDetails } from '../services/google/places';
 
 // Constants
 const GOOGLE_SYNC_INTERVAL_DAYS = 7;

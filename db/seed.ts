@@ -3,8 +3,8 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { salons, stylists, certifications, stylistCertifications } from '../shared/schema';
-import type { InsertSalon, InsertStylist, InsertCertification, InsertStylistCertification } from '../shared/schema';
+import { salons, stylists, certifications, stylistCertifications } from '@shared/schema';
+import type { InsertSalon, InsertStylist, InsertCertification, InsertStylistCertification } from '@shared/schema';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) {

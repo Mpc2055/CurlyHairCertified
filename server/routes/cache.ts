@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../middleware';
-import { getCachedDirectory, clearCache, getCacheStats } from '../cache';
+import { getCachedDirectory, clearCache, getCacheStats } from '../services/cache/directory-cache';
 
 export const cacheRouter = Router();
 

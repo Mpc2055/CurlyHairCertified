@@ -1,10 +1,10 @@
 import NodeCache from 'node-cache';
 import crypto from 'crypto';
+import { config } from '../../config';
 
 // Cache for rate limiting and duplicate detection
-// TTL: 1 hour for rate limiting, 24 hours for duplicate detection
 const rateLimitCache = new NodeCache({ stdTTL: 3600 }); // 1 hour
-const duplicateCache = new NodeCache({ stdTTL: 86400 }); // 24 hours
+const duplicateCache = new NodeCache({ stdTTL: config.rateLimit.duplicateWindowHours * 3600 }); // Configured hours
 
 // Common spam keywords to auto-reject
 const SPAM_KEYWORDS = [
@@ -59,15 +59,15 @@ export function checkSpamProtection(
     }
   }
 
-  // 3. Rate limiting: 5 posts per IP per hour
+  // 3. Rate limiting: Use configured posts per hour
   const rateLimitKey = `rate:${clientIp}`;
   const rateLimitInfo = rateLimitCache.get<RateLimitInfo>(rateLimitKey);
 
   if (rateLimitInfo) {
-    if (rateLimitInfo.posts >= 5) {
+    if (rateLimitInfo.posts >= config.rateLimit.postsPerHour) {
       return {
         allowed: false,
-        reason: 'Rate limit exceeded (5 posts per hour)',
+        reason: `Rate limit exceeded (${config.rateLimit.postsPerHour} posts per hour)`,
       };
     }
     // Update post count
@@ -83,17 +83,17 @@ export function checkSpamProtection(
     });
   }
 
-  // 4. Duplicate detection: reject same content in last 24 hours
+  // 4. Duplicate detection: reject same content in configured window
   const contentHash = crypto
     .createHash('sha256')
     .update(combinedContent.trim().toLowerCase())
     .digest('hex');
-  
+
   const duplicateKey = `dup:${contentHash}`;
   if (duplicateCache.get(duplicateKey)) {
     return {
       allowed: false,
-      reason: 'Duplicate content detected (same content posted in last 24 hours)',
+      reason: `Duplicate content detected (same content posted in last ${config.rateLimit.duplicateWindowHours} hours)`,
     };
   }
 

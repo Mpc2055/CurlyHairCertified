@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler, rateLimitError } from '../middleware';
 import { storage } from '../storage';
-import { clearCache } from '../cache';
+import { clearCache } from '../services/cache/directory-cache';
 
 export const adminRouter = Router();
 

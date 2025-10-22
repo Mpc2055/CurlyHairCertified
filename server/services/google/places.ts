@@ -1,4 +1,5 @@
-const PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+import { config } from '../../config';
+
 const FIND_PLACE_URL = 'https://maps.googleapis.com/maps/api/place/findplacefromtext/json';
 const PLACE_DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
@@ -35,7 +36,7 @@ export async function findPlaceId(
   businessName: string,
   address: string
 ): Promise<PlaceSearchResult> {
-  if (!PLACES_API_KEY) {
+  if (!config.google.placesApiKey) {
     console.error('[google-places] GOOGLE_PLACES_API_KEY not set');
     return { placeId: null };
   }
@@ -65,13 +66,13 @@ export async function findPlaceId(
  * Get detailed information for a Place ID
  */
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
-  if (!PLACES_API_KEY) {
+  if (!config.google.placesApiKey) {
     console.error('[google-places] GOOGLE_PLACES_API_KEY not set');
     return null;
   }
 
   try {
-    const url = `${PLACE_DETAILS_URL}?place_id=${encodeURIComponent(placeId)}&fields=rating,user_ratings_total,url&key=${PLACES_API_KEY}`;
+    const url = `${PLACE_DETAILS_URL}?place_id=${encodeURIComponent(placeId)}&fields=rating,user_ratings_total,url&key=${config.google.placesApiKey}`;
 
     const response = await fetch(url);
     const data = await response.json() as PlaceDetailsResponse;
@@ -98,7 +99,7 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | n
  */
 async function searchPlace(query: string): Promise<string | null> {
   try {
-    const url = `${FIND_PLACE_URL}?input=${encodeURIComponent(query)}&inputtype=textquery&fields=place_id&key=${PLACES_API_KEY}`;
+    const url = `${FIND_PLACE_URL}?input=${encodeURIComponent(query)}&inputtype=textquery&fields=place_id&key=${config.google.placesApiKey}`;
 
     const response = await fetch(url);
     const data = await response.json() as FindPlaceResponse;
