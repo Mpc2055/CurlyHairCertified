@@ -7,7 +7,6 @@ import BlogPost from "@/pages/blog-post";
 import Forum from "@/pages/forum";
 import ForumNew from "@/pages/forum-new";
 import ForumTopic from "@/pages/forum-topic";
-import AnalyticsMentions from "@/pages/analytics-mentions";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,7 +19,6 @@ function Router() {
       <Route path="/forum" component={Forum} />
       <Route path="/forum/new" component={ForumNew} />
       <Route path="/forum/:id" component={ForumTopic} />
-      <Route path="/analytics/mentions" component={AnalyticsMentions} />
       <Route component={NotFound} />
     </Switch>
   );

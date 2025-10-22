@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Map, TrendingUp, BookOpen } from "lucide-react";
+import { MessageSquare, Map, BookOpen } from "lucide-react";
 
 export function Navigation() {
   const [location] = useLocation();
@@ -58,18 +58,6 @@ export function Navigation() {
               >
                 <MessageSquare className="w-4 h-4" />
                 <span className="hidden sm:inline">Forum</span>
-              </Button>
-            </Link>
-
-            <Link href="/analytics/mentions">
-              <Button
-                variant={isActive("/analytics") ? "default" : "ghost"}
-                size="sm"
-                data-testid="nav-analytics"
-                className="gap-2"
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span className="hidden sm:inline">Trending</span>
               </Button>
             </Link>
           </nav>
