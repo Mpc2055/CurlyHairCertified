@@ -111,7 +111,7 @@ export default function ForumTopic() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-4xl">
         {isLoading ? (
           <LoadingState message="Loading topic..." />
         ) : !topic ? (
@@ -155,7 +155,7 @@ export default function ForumTopic() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-lg mb-6">{topic.content}</p>
+                <p className="whitespace-pre-wrap text-base sm:text-lg mb-6">{topic.content}</p>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   {topic.authorName && <span className="font-medium">{topic.authorName}</span>}
                   <span>•</span>

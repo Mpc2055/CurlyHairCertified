@@ -13,7 +13,7 @@ export default function Landing() {
         
         {/* Content */}
         <div className="relative z-10 max-w-4xl mx-auto px-6 py-20 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-foreground">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground">
             Find Your Perfect<br />
             <span className="text-primary">Curly Hair Stylist</span><br />
             in Rochester

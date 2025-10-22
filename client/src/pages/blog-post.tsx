@@ -57,12 +57,12 @@ export default function BlogPost() {
         <article>
           {/* Article Header */}
           <header className="mb-8">
-            <h1 className="font-heading text-4xl md:text-5xl font-bold mb-4 text-foreground">
+            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-foreground">
               {post.title}
             </h1>
 
             {post.subtitle && (
-              <p className="text-xl md:text-2xl text-muted-foreground mb-6">
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-6">
                 {post.subtitle}
               </p>
             )}
@@ -102,9 +102,9 @@ export default function BlogPost() {
 
           {/* Article Content */}
           <Card>
-            <CardContent className="p-8">
+            <CardContent className="p-4 sm:p-8">
               <div
-                className="prose prose-lg max-w-none
+                className="prose sm:prose-lg max-w-none
                   prose-headings:font-heading prose-headings:text-foreground
                   prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-4
                   prose-h2:text-2xl prose-h2:font-bold prose-h2:mb-3 prose-h2:mt-8
@@ -126,7 +126,7 @@ export default function BlogPost() {
           {/* Author Bio Card */}
           {post.authorBio && (
             <Card className="mt-8">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 <h3 className="font-heading text-xl font-semibold mb-2">About the Author</h3>
                 <p className="text-muted-foreground mb-1 font-medium">{post.authorName}</p>
                 <p className="text-sm text-muted-foreground">{post.authorBio}</p>

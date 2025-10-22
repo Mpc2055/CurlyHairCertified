@@ -126,7 +126,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                       variant="outline"
                       size="icon"
                       asChild
-                      className="h-9 w-9"
+                      className="h-11 w-11"
                       data-testid={`link-instagram-${stylist.id}`}
                     >
                       <a href={getInstagramUrl(stylist.instagram)} target="_blank" rel="noopener noreferrer">
@@ -145,7 +145,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                       variant="outline"
                       size="icon"
                       asChild
-                      className="h-9 w-9"
+                      className="h-11 w-11"
                       data-testid={`link-website-${stylist.id}`}
                     >
                       <a href={stylist.website} target="_blank" rel="noopener noreferrer">
@@ -164,7 +164,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                       variant="outline"
                       size="icon"
                       asChild
-                      className="h-9 w-9"
+                      className="h-11 w-11"
                       data-testid={`link-phone-${stylist.id}`}
                     >
                       <a href={`tel:${stylist.phone}`}>
@@ -183,7 +183,7 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                       variant="outline"
                       size="icon"
                       asChild
-                      className="h-9 w-9"
+                      className="h-11 w-11"
                       data-testid={`link-email-${stylist.id}`}
                     >
                       <a href={`mailto:${stylist.email}`}>

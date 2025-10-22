@@ -93,11 +93,11 @@ export function MapPanel({ isOpen, onClose, onToggle, salons, selectedSalonId, o
 
       {/* Mobile: Bottom Sheet */}
       <Sheet open={isOpen && typeof window !== 'undefined' && window.innerWidth < 1024} onOpenChange={(open) => !open && onClose()}>
-        <SheetContent side="bottom" className="h-[75vh] p-0 lg:hidden">
+        <SheetContent side="bottom" className="h-[50vh] p-0 lg:hidden">
           <SheetHeader className="p-4 border-b">
             <SheetTitle>Stylist Locations</SheetTitle>
           </SheetHeader>
-          <div className="h-[calc(75vh-65px)]">
+          <div className="h-[calc(50vh-65px)]">
             <GoogleMap
               salons={salons}
               selectedSalonId={selectedSalonId}

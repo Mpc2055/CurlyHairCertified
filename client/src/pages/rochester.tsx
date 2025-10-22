@@ -161,7 +161,7 @@ export default function Rochester() {
             ${isMapOpen ? 'lg:mr-[45%]' : ''}
           `}
         >
-          <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <div className="max-w-7xl mx-auto p-3 sm:p-4 md:p-6 space-y-6">
             {/* Mobile Filter Button */}
             <div className="lg:hidden">
               <Sheet open={isMobileFilterOpen} onOpenChange={setIsMobileFilterOpen}>

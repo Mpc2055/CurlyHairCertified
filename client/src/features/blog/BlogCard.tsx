@@ -56,11 +56,11 @@ export function BlogCard({ post }: BlogCardProps) {
 
         <CardContent className="pt-0 mt-auto">
           {/* Meta Info */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
             <span className="font-medium">{post.authorName}</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <span>{formattedDate}</span>
-            <span>•</span>
+            <span className="hidden sm:inline">•</span>
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <span>{post.readTime} min read</span>
