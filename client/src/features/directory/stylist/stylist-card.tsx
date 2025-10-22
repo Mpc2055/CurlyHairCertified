@@ -1,34 +1,42 @@
+import { useState } from "react";
 import { Stylist } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Instagram, MapPin, CheckCircle2, Globe, Phone, Mail, Pencil } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Instagram, Globe, Phone, Mail, Pencil, Star } from "lucide-react";
+import { SalonRatingDialog } from "./salon-rating-dialog";
 
 interface StylistCardProps {
   stylist: Stylist & {
     salonName?: string;
     salonAddress?: string;
+    salonCity?: string;
+    salonState?: string;
     salonId?: string;
+    salonGooglePlaceId?: string;
+    salonGoogleRating?: number;
+    salonGoogleReviewCount?: number;
+    salonGoogleReviewsUrl?: string;
   };
   onViewOnMap?: () => void;
   isSelected?: boolean;
 }
 
 export function StylistCard({ stylist, onViewOnMap, isSelected = false }: StylistCardProps) {
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+
   const getInstagramUrl = (handle: string) => {
     const cleanHandle = handle.replace('@', '');
     return `https://instagram.com/${cleanHandle}`;
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  // Check if we should display salon rating
+  const hasRating =
+    stylist.salonGoogleRating &&
+    stylist.salonGoogleReviewCount &&
+    stylist.salonGoogleReviewsUrl &&
+    stylist.salonGooglePlaceId !== 'NOT_FOUND';
 
   return (
     <Card
@@ -39,40 +47,45 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
       data-testid={`card-stylist-${stylist.id}`}
       data-salon-id={stylist.salonId}
     >
-      <CardContent className="p-6 flex-1 flex flex-col">
-        {/* Avatar - Centered for grid view */}
-        <div className="flex justify-center mb-4">
-          <Avatar className="w-24 h-24 border-2 border-border">
-            {stylist.photo ? (
-              <AvatarImage src={stylist.photo} alt={stylist.name} />
-            ) : null}
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
-              {getInitials(stylist.name)}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-
+      <CardContent className="p-4 flex-1 flex flex-col">
         {/* Content */}
         <div className="flex-1 flex flex-col text-center">
-          {/* Name and Verification */}
+          {/* Stylist Name - Hero Element */}
           <div className="mb-2">
-            <h3 className="font-semibold text-lg text-foreground mb-1" data-testid={`text-stylist-name-${stylist.id}`}>
+            <h3 className="font-bold text-2xl tracking-tight text-foreground mb-1" data-testid={`text-stylist-name-${stylist.id}`}>
               {stylist.name}
             </h3>
-            {stylist.verified && (
-              <Badge variant="outline" className="border-chart-3 text-chart-3 gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                Verified
-              </Badge>
-            )}
           </div>
 
-          {/* Salon Info */}
+          {/* Salon Info - Two Line Compact */}
           {stylist.salonName && (
-            <div className="mb-3">
-              <p className="text-sm font-medium text-muted-foreground">{stylist.salonName}</p>
-              {stylist.salonAddress && (
-                <p className="text-xs text-muted-foreground">{stylist.salonAddress}</p>
+            <div className="mb-2">
+              {/* Line 1: Salon Name + Rating */}
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">{stylist.salonName}</span>
+                {hasRating && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsRatingDialogOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer"
+                      data-testid={`button-salon-rating-${stylist.id}`}
+                    >
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{stylist.salonGoogleRating?.toFixed(1)}</span>
+                      <span className="text-xs">({stylist.salonGoogleReviewCount?.toLocaleString()})</span>
+                    </button>
+                  </>
+                )}
+              </div>
+              {/* Line 2: City, State */}
+              {stylist.salonCity && stylist.salonState && (
+                <div className="text-xs text-muted-foreground">
+                  {stylist.salonCity}, {stylist.salonState}
+                </div>
               )}
             </div>
           )}
@@ -102,67 +115,86 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
             </div>
           )}
 
-          {/* Contact Links - Compact for grid */}
-          <div className="flex flex-col gap-2 mt-auto">
-            {stylist.instagram && (
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="gap-2 w-full"
-                data-testid={`link-instagram-${stylist.id}`}
-              >
-                <a href={getInstagramUrl(stylist.instagram)} target="_blank" rel="noopener noreferrer">
-                  <Instagram className="w-4 h-4" />
-                  Portfolio
-                </a>
-              </Button>
-            )}
+          {/* Contact Icons - Horizontal Row with Tooltips */}
+          <TooltipProvider>
+            <div className="flex gap-2 justify-center mt-auto mb-2">
+              {stylist.instagram && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      asChild
+                      className="h-9 w-9"
+                      data-testid={`link-instagram-${stylist.id}`}
+                    >
+                      <a href={getInstagramUrl(stylist.instagram)} target="_blank" rel="noopener noreferrer">
+                        <Instagram className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Instagram</TooltipContent>
+                </Tooltip>
+              )}
 
-            {stylist.website && (
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="gap-2 w-full"
-                data-testid={`link-website-${stylist.id}`}
-              >
-                <a href={stylist.website} target="_blank" rel="noopener noreferrer">
-                  <Globe className="w-4 h-4" />
-                  Website
-                </a>
-              </Button>
-            )}
+              {stylist.website && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      asChild
+                      className="h-9 w-9"
+                      data-testid={`link-website-${stylist.id}`}
+                    >
+                      <a href={stylist.website} target="_blank" rel="noopener noreferrer">
+                        <Globe className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Website</TooltipContent>
+                </Tooltip>
+              )}
 
-            <div className="flex gap-2">
               {stylist.phone && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="gap-2 flex-1"
-                  data-testid={`link-phone-${stylist.id}`}
-                >
-                  <a href={`tel:${stylist.phone}`}>
-                    <Phone className="w-4 h-4" />
-                  </a>
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      asChild
+                      className="h-9 w-9"
+                      data-testid={`link-phone-${stylist.id}`}
+                    >
+                      <a href={`tel:${stylist.phone}`}>
+                        <Phone className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Phone</TooltipContent>
+                </Tooltip>
               )}
 
               {stylist.email && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="gap-2 flex-1"
-                  data-testid={`link-email-${stylist.id}`}
-                >
-                  <a href={`mailto:${stylist.email}`}>
-                    <Mail className="w-4 h-4" />
-                  </a>
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      asChild
+                      className="h-9 w-9"
+                      data-testid={`link-email-${stylist.id}`}
+                    >
+                      <a href={`mailto:${stylist.email}`}>
+                        <Mail className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Email</TooltipContent>
+                </Tooltip>
               )}
             </div>
+          </TooltipProvider>
 
             {/* Suggest Correction Link */}
             <div className="mt-2 pt-2 border-t border-border">
@@ -183,9 +215,20 @@ export function StylistCard({ stylist, onViewOnMap, isSelected = false }: Stylis
                 </a>
               </Button>
             </div>
-          </div>
         </div>
       </CardContent>
+
+      {/* Salon Rating Dialog */}
+      {hasRating && stylist.salonName && (
+        <SalonRatingDialog
+          open={isRatingDialogOpen}
+          onOpenChange={setIsRatingDialogOpen}
+          salonName={stylist.salonName}
+          rating={stylist.salonGoogleRating!}
+          reviewCount={stylist.salonGoogleReviewCount!}
+          reviewsUrl={stylist.salonGoogleReviewsUrl!}
+        />
+      )}
     </Card>
   );
 }

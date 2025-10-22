@@ -4,7 +4,14 @@ import { StylistCard } from "./stylist/stylist-card";
 export interface StylistWithSalon extends Stylist {
   salonName: string;
   salonAddress: string;
+  salonCity: string;
+  salonState: string;
   salonId: string;
+  // Google Places data from salon
+  salonGooglePlaceId?: string;
+  salonGoogleRating?: number;
+  salonGoogleReviewCount?: number;
+  salonGoogleReviewsUrl?: string;
 }
 
 interface StylistGridProps {
@@ -61,7 +68,14 @@ export function flattenSalonsToStylists(salons: Salon[]): StylistWithSalon[] {
         ...stylist,
         salonName: salon.name,
         salonAddress: salon.address,
+        salonCity: salon.city,
+        salonState: salon.state,
         salonId: salon.id,
+        // Pass Google Places data from salon
+        salonGooglePlaceId: salon.googlePlaceId,
+        salonGoogleRating: salon.googleRating,
+        salonGoogleReviewCount: salon.googleReviewCount,
+        salonGoogleReviewsUrl: salon.googleReviewsUrl,
       });
     });
   });
@@ -69,7 +83,7 @@ export function flattenSalonsToStylists(salons: Salon[]): StylistWithSalon[] {
   return stylists;
 }
 
-export type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'certs-desc';
+export type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'certs-desc' | 'rating-desc';
 
 /**
  * Sort stylists by various criteria
@@ -102,6 +116,24 @@ export function sortStylists(stylists: StylistWithSalon[], sortBy: SortOption): 
 
     case 'certs-desc':
       return sorted.sort((a, b) => b.certifications.length - a.certifications.length);
+
+    case 'rating-desc':
+      return sorted.sort((a, b) => {
+        // Handle missing ratings (push to end)
+        if (!a.salonGoogleRating && !b.salonGoogleRating) return 0;
+        if (!a.salonGoogleRating) return 1;
+        if (!b.salonGoogleRating) return -1;
+
+        // Primary sort: rating (descending)
+        if (b.salonGoogleRating !== a.salonGoogleRating) {
+          return b.salonGoogleRating - a.salonGoogleRating;
+        }
+
+        // Tie-breaker: review count (descending)
+        const aReviews = a.salonGoogleReviewCount || 0;
+        const bReviews = b.salonGoogleReviewCount || 0;
+        return bReviews - aReviews;
+      });
 
     default:
       return sorted;

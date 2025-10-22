@@ -14,6 +14,7 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: 'price-asc', label: 'Price (Low to High)' },
   { value: 'price-desc', label: 'Price (High to Low)' },
   { value: 'certs-desc', label: 'Most Certifications' },
+  { value: 'rating-desc', label: 'Highest Rated Salon' },
 ];
 
 /**
