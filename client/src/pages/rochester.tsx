@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 
 export default function Rochester() {
   const [selectedSalonId, setSelectedSalonId] = useState<string>();
-  const [sortBy, setSortBy] = useState<SortOption>('name-asc');
+  const [sortBy, setSortBy] = useState<SortOption>('rating-desc');
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
