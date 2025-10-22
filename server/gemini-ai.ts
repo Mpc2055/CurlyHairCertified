@@ -95,11 +95,10 @@ Search for information about this stylist focusing on Google/Yelp reviews, Insta
 
     const response = await ai.models.generateContent({
       model: MODEL,
+      systemInstruction: {
+        parts: [{ text: SYSTEM_PROMPT }],
+      },
       contents: [
-        {
-          role: 'user',
-          parts: [{ text: SYSTEM_PROMPT }],
-        },
         {
           role: 'user',
           parts: [{ text: userPrompt }],
@@ -112,10 +111,24 @@ Search for information about this stylist focusing on Google/Yelp reviews, Insta
       },
     });
 
-    const summary = response.text || '';
+    // Debug: Log the full response to understand structure
+    console.log(`[gemini-ai] Response candidates:`, response.candidates?.length || 0);
+    console.log(`[gemini-ai] Full response:`, JSON.stringify(response, null, 2).substring(0, 2000));
+    
+    // Extract text from the response
+    let summary = '';
+    if (response.candidates && response.candidates.length > 0) {
+      const candidate = response.candidates[0];
+      console.log(`[gemini-ai] Candidate content:`, JSON.stringify(candidate.content, null, 2));
+      if (candidate.content && candidate.content.parts) {
+        summary = candidate.content.parts.map((part: any) => part.text || '').join('');
+      }
+    }
+
+    console.log(`[gemini-ai] Extracted summary length: ${summary.length} chars`);
 
     // Extract grounding metadata
-    const groundingMetadata = response.groundingMetadata || {};
+    const groundingMetadata = (response.candidates?.[0] as any)?.groundingMetadata || {};
     const sources = JSON.stringify({
       searchQueries: groundingMetadata.webSearchQueries || [],
       groundingChunks: groundingMetadata.groundingChunks?.map((chunk: any) => ({
