@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { DirectoryData } from "@shared/schema";
+import { api } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 /**
  * Hook to fetch directory data (salons, stylists, certifications)
@@ -7,6 +9,7 @@ import { DirectoryData } from "@shared/schema";
  */
 export function useDirectory() {
   return useQuery<DirectoryData>({
-    queryKey: ['/api/directory'],
+    queryKey: queryKeys.directory.list(),
+    queryFn: () => api.directory.getDirectory(),
   });
 }

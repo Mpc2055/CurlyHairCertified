@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { MessageSquare, Flag, MoreVertical } from "lucide-react";
-import { apiRequest } from "@/lib/api";
+import { api } from "@/lib/api-client";
 import { queryClient } from "@/lib/query";
+import { queryKeys } from "@/lib/query-keys";
 import type { ReplyWithChildren } from "server/storage";
 
 const replyFormSchema = z.object({
@@ -52,10 +53,7 @@ export function Reply({ reply, topicId, depth = 0 }: ReplyProps) {
   });
 
   const flagMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/forum/flag', { contentType: 'reply', contentId: reply.id });
-      return await response.json();
-    },
+    mutationFn: () => api.forum.flagContent({ contentType: 'reply', contentId: reply.id }),
     onSuccess: () => {
       toast({
         title: "Reply flagged",
@@ -65,25 +63,23 @@ export function Reply({ reply, topicId, depth = 0 }: ReplyProps) {
   });
 
   const replyMutation = useMutation({
-    mutationFn: async (data: ReplyFormValues) => {
-      const response = await apiRequest('POST', `/api/forum/topics/${topicId}/reply`, {
-        ...data,
+    mutationFn: (data: ReplyFormValues) =>
+      api.forum.createReply(topicId, {
+        content: data.content,
         parentReplyId: reply.id,
         authorName: data.authorName || undefined,
         authorEmail: data.authorEmail || undefined,
-      });
-      return await response.json();
-    },
+      }),
     onSuccess: () => {
       toast({
         title: "Reply posted!",
         description: "Your reply has been added.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/forum/topics', topicId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.forum.topic(topicId) });
       setIsReplying(false);
       form.reset();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to post reply.",

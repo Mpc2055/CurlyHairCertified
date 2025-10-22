@@ -11,8 +11,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import { apiRequest } from "@/lib/api";
+import { api } from "@/lib/api-client";
 import { queryClient } from "@/lib/query";
+import { queryKeys } from "@/lib/query-keys";
 import { PageLayout } from "@/layouts/PageLayout";
 
 const formSchema = z.object({
@@ -41,32 +42,29 @@ export default function ForumNew() {
   });
 
   const createTopicMutation = useMutation({
-    mutationFn: async (data: FormValues) => {
+    mutationFn: (data: FormValues) => {
       // Convert tags string to array
       const tags = data.tags
         ? data.tags.split(',').map(t => t.trim()).filter(Boolean)
         : [];
 
-      const payload = {
+      return api.forum.createTopic({
         title: data.title,
         content: data.content,
         authorName: data.authorName || undefined,
         authorEmail: data.authorEmail || undefined,
         tags,
-      };
-
-      const response = await apiRequest('POST', '/api/forum/topics', payload);
-      return await response.json();
+      });
     },
-    onSuccess: (topic: any) => {
+    onSuccess: (topic) => {
       toast({
         title: "Topic created!",
         description: "Your topic has been posted successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/forum/topics'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.forum.topics() });
       setLocation(`/forum/${topic.id}`);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to create topic. Please try again.",

@@ -1,6 +1,11 @@
 /**
- * API utility functions for making HTTP requests
- * Provides consistent error handling and request formatting
+ * @deprecated This file is deprecated. Use the new API client instead.
+ *
+ * Migration guide:
+ * - Old: `apiRequest('GET', '/api/directory')`
+ * - New: `api.directory.getDirectory()`
+ *
+ * See: /src/lib/api-client.ts
  */
 
 async function throwIfResNotOk(res: Response) {
@@ -11,11 +16,7 @@ async function throwIfResNotOk(res: Response) {
 }
 
 /**
- * Make an API request with automatic error handling
- * @param method - HTTP method (GET, POST, PUT, DELETE, etc.)
- * @param url - API endpoint URL
- * @param data - Optional request body data
- * @returns Response object
+ * @deprecated Use the typed API client from @/lib/api-client instead
  */
 export async function apiRequest(
   method: string,

@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ThumbsUp, Flag, MoreVertical } from "lucide-react";
-import { apiRequest } from "@/lib/api";
+import { api } from "@/lib/api-client";
 import { queryClient } from "@/lib/query";
+import { queryKeys } from "@/lib/query-keys";
 import { PageLayout } from "@/layouts/PageLayout";
 import { LoadingState, ErrorState } from "@/components/shared";
 import { Reply } from "@/features/forum";
@@ -53,20 +54,14 @@ export default function ForumTopic() {
   });
 
   const upvoteMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/forum/upvote', { topicId });
-      return await response.json();
-    },
+    mutationFn: () => api.forum.upvoteTopic({ topicId: topicId! }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/forum/topics', topicId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.forum.topic(topicId!) });
     },
   });
 
   const flagMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest('POST', '/api/forum/flag', { contentType: 'topic', contentId: topicId });
-      return await response.json();
-    },
+    mutationFn: () => api.forum.flagContent({ contentType: 'topic', contentId: topicId! }),
     onSuccess: () => {
       toast({
         title: "Topic flagged",
@@ -76,23 +71,21 @@ export default function ForumTopic() {
   });
 
   const replyMutation = useMutation({
-    mutationFn: async (data: ReplyFormValues) => {
-      const response = await apiRequest('POST', `/api/forum/topics/${topicId}/reply`, {
-        ...data,
+    mutationFn: (data: ReplyFormValues) =>
+      api.forum.createReply(topicId!, {
+        content: data.content,
         authorName: data.authorName || undefined,
         authorEmail: data.authorEmail || undefined,
-      });
-      return await response.json();
-    },
+      }),
     onSuccess: () => {
       toast({
         title: "Reply posted!",
         description: "Your reply has been added to the discussion.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/forum/topics', topicId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.forum.topic(topicId!) });
       form.reset();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message || "Failed to post reply.",

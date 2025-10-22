@@ -1,30 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { SelectTopic } from "@shared/schema";
 import type { TopicWithReplies } from "server/storage";
-
-interface UseTopicsParams {
-  sortBy?: 'recent' | 'replies' | 'newest';
-  searchQuery?: string;
-}
+import { api, type GetTopicsParams } from "@/lib/api-client";
+import { queryKeys } from "@/lib/query-keys";
 
 /**
  * Hook to fetch all forum topics with optional filtering
  */
-export function useTopics({ sortBy, searchQuery }: UseTopicsParams = {}) {
+export function useTopics(params: GetTopicsParams = {}) {
   return useQuery<SelectTopic[]>({
-    queryKey: ['/api/forum/topics', sortBy, searchQuery],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (sortBy) params.append('sortBy', sortBy);
-      if (searchQuery) params.append('search', searchQuery);
-
-      const url = `/api/forum/topics${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
-      }
-      return await response.json();
-    },
+    queryKey: queryKeys.forum.topicsList(params),
+    queryFn: () => api.forum.getTopics(params),
   });
 }
 
@@ -33,14 +19,8 @@ export function useTopics({ sortBy, searchQuery }: UseTopicsParams = {}) {
  */
 export function useTopic(topicId: number | null) {
   return useQuery<TopicWithReplies>({
-    queryKey: ['/api/forum/topics', topicId],
-    queryFn: async () => {
-      const response = await fetch(`/api/forum/topics/${topicId}`);
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
-      }
-      return await response.json();
-    },
+    queryKey: topicId ? queryKeys.forum.topic(topicId) : ["forum", "topic", null],
+    queryFn: () => api.forum.getTopic(topicId!),
     enabled: !!topicId,
   });
 }
